@@ -1,59 +1,73 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
-import e from "express";
 
-const userSchema = new mongoose.Schema({
-  username: {
-    type: String,
-    required: true,
-    unique: true,
-  },
+const userSchema = new mongoose.Schema(
+  {
+    username: {
+      type: String,
+      required: true,
+      trim: true,
+      minlength: 3,
+      maxlength: 30,
+      unique: true,
+    },
     email: {
-    type: String,
-    required: true,
-    unique: true,
+      type: String,
+      required: true,
+      trim: true,
+      lowercase: true,
+      unique: true,
     },
     password: {
-    type: String,
-    required: true,
-    minlength: 6,
-    },
-    profileImage: {
-    type: String,
-    default: "",
+      type: String,
+      required: true,
+      minlength: 6,
     },
     role: {
-    type: String,
-    enum: ["user", "trainer"],
-    default: "user",
+      type: String,
+      enum: ["user", "trainer", "admin"],
+      default: "user",
     },
-    weight: Number,
-    height: Number,
-    age: Number,
-
-    streak: {
-    type: Number,
-    default: 0,
+    avatarUrl: {
+      type: String,
+      default: null,
     },
-    lastActivityDate: Date,
-    strengthScore: {
-    type: Number,
-    default: 0,
-    }
-}, { timestamps: true });
-
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
-  next();
-});
-
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
+    height: {
+      type: Number,
+      default: null,
+    },
+    weight: {
+      type: Number,
+      default: null,
+    },
+    goal: {
+      type: String,
+      enum: ["lose_weight", "gain_muscle", "maintain"],
+      default: "maintain",
+    },
+    activityLevel: {
+      type: String,
+      enum: ["sedentary", "light", "moderate", "active", "very_active"],
+      default: "sedentary",
+    },
+    targetCalories: {
+      type: Number,
+      default: null,
+    },
+    targetProtein: {
+      type: Number,
+      default: null,
+    },
+    targetCarbs: {
+      type: Number,
+      default: null,
+    },
+    targetFat: {
+      type: Number,
+      default: null,
+    },
+  },
+  { timestamps: true }
+);
 
 const User = mongoose.model("User", userSchema);
 
