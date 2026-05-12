@@ -1,7 +1,29 @@
-import axios from "axios";
+const API_BASE_URL = "https://trainixapi.onrender.com/api";
 
-const API = axios.create({
-  baseURL: "http://YOUR_IP:3000/api",
-});
+type ApiOptions = RequestInit & {
+  token?: string | null;
+};
 
-export default API;
+export async function apiRequest<T>(
+  endpoint: string,
+  options: ApiOptions = {}
+): Promise<T> {
+  const { token, headers, ...rest } = options;
+
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    ...rest,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(headers || {}),
+    },
+  });
+
+  const data = await response.json().catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(data?.message || "Ошибка запроса к серверу");
+  }
+
+  return data;
+}
