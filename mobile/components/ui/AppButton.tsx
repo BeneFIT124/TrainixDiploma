@@ -38,9 +38,11 @@ export default function AppButton({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={COLORS.text} />
+        <ActivityIndicator color={isSecondary ? COLORS.text : "#061014"} />
       ) : (
-        <Text style={styles.text}>{title}</Text>
+        <Text style={[styles.text, isSecondary && styles.secondaryText]}>
+          {title}
+        </Text>
       )}
     </Pressable>
   );
@@ -66,6 +68,9 @@ const styles = StyleSheet.create({
     color: "#061014",
     fontSize: 16,
     fontWeight: "700",
+  },
+  secondaryText: {
+    color: COLORS.text,
   },
   pressed: {
     opacity: 0.75,

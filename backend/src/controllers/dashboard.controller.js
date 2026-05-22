@@ -130,6 +130,36 @@ export const getDashboard = async (req, res) => {
       (workout) => workout.status === "completed"
     ).length;
 
+    const getStartOfWeek = (date) => {
+      const start = new Date(date);
+      const weekDay = start.getDay();
+      const weekDiff = weekDay === 0 ? 6 : weekDay - 1;
+
+      start.setDate(start.getDate() - weekDiff);
+      start.setHours(0, 0, 0, 0);
+
+      return start;
+    };
+
+    const completedWorkouts = await Workout.find({
+      user: userId,
+      status: "completed",
+    }).select("workoutDate");
+
+    const activeWeekKeys = new Set(
+      completedWorkouts.map((workout) =>
+        getStartOfWeek(workout.workoutDate).toISOString()
+      )
+    );
+
+    let weeklyStreak = 0;
+    const cursorWeek = getStartOfWeek(now);
+
+    while (activeWeekKeys.has(cursorWeek.toISOString())) {
+      weeklyStreak += 1;
+      cursorWeek.setDate(cursorWeek.getDate() - 7);
+    }
+
     res.status(200).json({
       nutrition: {
         consumed: {
@@ -181,6 +211,7 @@ export const getDashboard = async (req, res) => {
         setsCount: weeklyWorkoutSets.length,
         repsCount: totalWeeklyReps,
         totalDuration: totalWeeklyDuration,
+        weeklyStreak,
       },
     });
   } catch (error) {

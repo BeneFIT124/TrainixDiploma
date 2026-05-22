@@ -31,7 +31,7 @@ export default function LoginScreen() {
         password,
       });
 
-      router.replace("/(tabs)");
+      router.replace("/");
     } catch (error) {
       Alert.alert(
         "Ошибка входа",

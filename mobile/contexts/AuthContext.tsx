@@ -8,11 +8,13 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 import {
   AuthUser,
+  getCurrentUser,
   loginUser,
   registerUser,
   LoginData,
   RegisterData,
 } from "@/services/authService";
+import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/constants/api";
 
 type AuthContextType = {
   user: AuthUser | null;
@@ -21,13 +23,12 @@ type AuthContextType = {
   isAuthenticated: boolean;
   login: (data: LoginData) => Promise<void>;
   register: (data: RegisterData) => Promise<void>;
+  refreshUser: () => Promise<void>;
+  updateUser: (newUser: AuthUser) => Promise<void>;
   logout: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextType | null>(null);
-
-const TOKEN_KEY = "trainix_token";
-const USER_KEY = "trainix_user";
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -40,28 +41,48 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadAuthData();
   }, []);
 
+  const clearAuthData = async () => {
+    await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
+    await AsyncStorage.removeItem(AUTH_USER_KEY);
+    setToken(null);
+    setUser(null);
+  };
+
   const loadAuthData = async () => {
     try {
-      const savedToken = await AsyncStorage.getItem(TOKEN_KEY);
-      const savedUser = await AsyncStorage.getItem(USER_KEY);
+      const savedToken = await AsyncStorage.getItem(AUTH_TOKEN_KEY);
 
-      if (savedToken && savedUser) {
-        setToken(savedToken);
-        setUser(JSON.parse(savedUser));
+      if (savedToken) {
+        const currentUser = await getCurrentUser(savedToken);
+        await saveAuthData(savedToken, currentUser);
       }
-    } catch (error) {
-      console.log("Load auth error:", error);
+    } catch {
+      await clearAuthData();
     } finally {
       setIsLoading(false);
     }
   };
 
   const saveAuthData = async (newToken: string, newUser: AuthUser) => {
-    await AsyncStorage.setItem(TOKEN_KEY, newToken);
-    await AsyncStorage.setItem(USER_KEY, JSON.stringify(newUser));
+    await AsyncStorage.setItem(AUTH_TOKEN_KEY, newToken);
+    await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
 
     setToken(newToken);
     setUser(newUser);
+  };
+
+  const updateUser = async (newUser: AuthUser) => {
+    await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
+    setUser(newUser);
+  };
+
+  const refreshUser = async () => {
+    if (!token) {
+      return;
+    }
+
+    const currentUser = await getCurrentUser(token);
+    await updateUser(currentUser);
   };
 
   const login = async (data: LoginData) => {
@@ -75,11 +96,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const logout = async () => {
-    await AsyncStorage.removeItem(TOKEN_KEY);
-    await AsyncStorage.removeItem(USER_KEY);
-
-    setToken(null);
-    setUser(null);
+    await clearAuthData();
   };
 
   return (
@@ -91,6 +108,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         isAuthenticated,
         login,
         register,
+        refreshUser,
+        updateUser,
         logout,
       }}
     >

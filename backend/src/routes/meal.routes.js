@@ -3,6 +3,7 @@ import { protect } from "../middleware/auth.middleware.js";
 import {
   createMeal,
   getMeals,
+  getMealById,
   addMealItem,
   getMealItems,
   getDailyNutritionSummary,
@@ -17,6 +18,7 @@ router.post("/", protect, createMeal);
 router.get("/", protect, getMeals);
 router.get("/by-date", protect, getMealsByDate);
 router.get("/summary/daily", protect, getDailyNutritionSummary);
+router.get("/:mealId", protect, getMealById);
 
 router.post("/:mealId/items", protect, addMealItem);
 router.get("/:mealId/items", protect, getMealItems);

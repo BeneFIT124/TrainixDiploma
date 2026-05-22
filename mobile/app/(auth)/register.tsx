@@ -47,7 +47,7 @@ const [isLoading, setIsLoading] = useState(false);
       password,
     });
 
-    router.replace("/(tabs)");
+    router.replace("/");
   } catch (error) {
     Alert.alert(
       "Ошибка регистрации",

@@ -1,30 +1,186 @@
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { router, useFocusEffect } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useState } from "react";
 
 import ScreenContainer from "@/components/ui/ScreenContainer";
-import GlassCard from "@/components/ui/GlassCard";
 import AppButton from "@/components/ui/AppButton";
+import GlassCard from "@/components/ui/GlassCard";
+import WorkoutCard from "@/components/workouts/WorkoutCard";
+
 import { COLORS } from "@/constants/colors";
+import { useActivePlanStore } from "@/store/activePlanStore";
+import { useWorkoutBuilderStore } from "@/store/workoutBuilderStore";
+import { getWorkoutItems, getWorkouts, Workout } from "@/services/workoutService";
+
+type WorkoutWithCount = Workout & {
+  exercisesCount: number;
+};
 
 export default function WorkoutsScreen() {
+  const { activeWorkoutPlan } = useActivePlanStore();
+  const { setWorkoutFromPlanDay } = useWorkoutBuilderStore();
+  const [workouts, setWorkouts] = useState<WorkoutWithCount[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadWorkouts = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+      const data = await getWorkouts();
+      const withCounts = await Promise.all(
+        data.map(async (workout) => {
+          try {
+            const items = await getWorkoutItems(workout._id);
+            return { ...workout, exercisesCount: items.length };
+          } catch {
+            return { ...workout, exercisesCount: 0 };
+          }
+        })
+      );
+      setWorkouts(withCounts);
+    } catch (loadError) {
+      setError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Не удалось загрузить тренировки"
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useFocusEffect(
+    useCallback(() => {
+      loadWorkouts();
+    }, [])
+  );
+
+  const handleStartPlanDay = (day: any) => {
+    setWorkoutFromPlanDay(day);
+    router.push("/workouts/create");
+  };
+
   return (
     <ScreenContainer>
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scroll}
       >
-        <Text style={styles.title}>Тренировки</Text>
-        <Text style={styles.subtitle}>
-          Создавай тренировки, добавляй упражнения и отслеживай силовой прогресс.
-        </Text>
-
-        <AppButton title="Начать тренировку" onPress={() => {}} style={styles.button} />
-
-        <GlassCard style={styles.card}>
-          <Text style={styles.cardTitle}>Пока тренировок нет</Text>
-          <Text style={styles.cardText}>
-            После создания тренировки здесь появится история занятий.
+        <View style={styles.header}>
+          <Text style={styles.title}>Тренировки</Text>
+          <Text style={styles.subtitle}>
+            Создавай тренировки, добавляй упражнения и отслеживай силовой
+            прогресс.
           </Text>
-        </GlassCard>
+        </View>
+
+        <AppButton
+          title="Начать тренировку"
+          onPress={() => router.push("/workouts/create")}
+          style={styles.button}
+        />
+
+        {activeWorkoutPlan && (
+          <GlassCard style={styles.activePlanCard}>
+            <View style={styles.activePlanHeader}>
+              <View style={styles.activePlanInfo}>
+                <Text style={styles.activePlanLabel}>Активный план</Text>
+                <Text style={styles.activePlanTitle}>
+                  {activeWorkoutPlan.title}
+                </Text>
+                <Text style={styles.activePlanTrainer}>
+                  Тренер: {activeWorkoutPlan.trainerName}
+                </Text>
+              </View>
+
+              <View style={styles.activePlanIcon}>
+                <Ionicons
+                  name="flame-outline"
+                  size={26}
+                  color={COLORS.primary}
+                />
+              </View>
+            </View>
+
+            <Text style={styles.planDaysTitle}>Выбери день плана</Text>
+
+            {activeWorkoutPlan.days.map((day) => (
+              <Pressable
+                key={day.id}
+                onPress={() => handleStartPlanDay(day)}
+                style={({ pressed }) => [
+                  styles.planDayButton,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <View style={styles.planDayInfo}>
+                  <Text style={styles.planDayTitle}>{day.title}</Text>
+                  <Text style={styles.planDayMeta}>
+                    {day.exercises.length} упражнений
+                  </Text>
+                </View>
+
+                <Ionicons
+                  name="chevron-forward"
+                  size={20}
+                  color={COLORS.textMuted}
+                />
+              </Pressable>
+            ))}
+          </GlassCard>
+        )}
+
+        <View style={styles.statsRow}>
+          <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{workouts.length}</Text>
+            <Text style={styles.statLabel}>всего</Text>
+          </GlassCard>
+
+          <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>
+              {workouts.reduce(
+                (sum, workout) => sum + (workout.durationMinutes || 0),
+                0
+              )}
+            </Text>
+            <Text style={styles.statLabel}>минут</Text>
+          </GlassCard>
+        </View>
+
+        <Text style={styles.sectionTitle}>История тренировок</Text>
+
+        {isLoading ? (
+          <GlassCard style={styles.stateCard}>
+            <ActivityIndicator color={COLORS.primary} />
+            <Text style={styles.stateText}>Загружаем тренировки...</Text>
+          </GlassCard>
+        ) : error ? (
+          <GlassCard style={styles.stateCard}>
+            <Text style={styles.emptyTitle}>Не удалось загрузить данные</Text>
+            <Text style={styles.emptyText}>{error}</Text>
+            <AppButton title="Повторить" onPress={loadWorkouts} />
+          </GlassCard>
+        ) : workouts.length === 0 ? (
+          <GlassCard style={styles.stateCard}>
+            <Text style={styles.emptyTitle}>Тренировок пока нет</Text>
+            <Text style={styles.emptyText}>
+              Начни первую тренировку, и она появится в истории.
+            </Text>
+          </GlassCard>
+        ) : (
+          workouts.map((workout) => (
+            <WorkoutCard
+              key={workout._id}
+              title={workout.title}
+              date={new Date(workout.workoutDate).toLocaleDateString("ru-RU")}
+              duration={workout.durationMinutes || 0}
+              exercisesCount={workout.exercisesCount}
+              onPress={() => router.push(`/workouts/${workout._id}`)}
+            />
+          ))
+        )}
       </ScrollView>
     </ScreenContainer>
   );
@@ -32,35 +188,141 @@ export default function WorkoutsScreen() {
 
 const styles = StyleSheet.create({
   scroll: {
-    paddingBottom: 120,
+    paddingBottom: 130,
+  },
+  header: {
+    marginBottom: 20,
   },
   title: {
     color: COLORS.text,
     fontSize: 32,
-    fontWeight: "800",
+    fontWeight: "900",
     marginBottom: 8,
   },
   subtitle: {
     color: COLORS.textSecondary,
     fontSize: 16,
     lineHeight: 22,
-    marginBottom: 20,
   },
   button: {
+    marginBottom: 16,
+  },
+  activePlanCard: {
+    marginBottom: 24,
+  },
+  activePlanHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
     marginBottom: 18,
   },
-  card: {
-    marginTop: 4,
+  activePlanInfo: {
+    flex: 1,
   },
-  cardTitle: {
+  activePlanLabel: {
+    color: COLORS.primary,
+    fontSize: 13,
+    fontWeight: "900",
+    marginBottom: 5,
+  },
+  activePlanTitle: {
     color: COLORS.text,
     fontSize: 20,
-    fontWeight: "800",
-    marginBottom: 8,
+    fontWeight: "900",
+    marginBottom: 5,
   },
-  cardText: {
+  activePlanTrainer: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: "600",
+  },
+  activePlanIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 17,
+    backgroundColor: "rgba(94,234,212,0.12)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  planDaysTitle: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 12,
+  },
+  planDayButton: {
+    minHeight: 64,
+    borderRadius: 18,
+    padding: 14,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+  },
+  pressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.98 }],
+  },
+  planDayInfo: {
+    flex: 1,
+  },
+  planDayTitle: {
+    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  planDayMeta: {
+    color: COLORS.textSecondary,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  statsRow: {
+    flexDirection: "row",
+    gap: 12,
+    marginBottom: 24,
+  },
+  statCard: {
+    flex: 1,
+  },
+  statValue: {
+    color: COLORS.text,
+    fontSize: 30,
+    fontWeight: "900",
+  },
+  statLabel: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    color: COLORS.text,
+    fontSize: 21,
+    fontWeight: "900",
+    marginBottom: 14,
+  },
+  stateCard: {
+    alignItems: "center",
+    gap: 12,
+  },
+  stateText: {
     color: COLORS.textSecondary,
     fontSize: 15,
-    lineHeight: 22,
+    fontWeight: "700",
+  },
+  emptyTitle: {
+    color: COLORS.text,
+    fontSize: 19,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  emptyText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    lineHeight: 21,
+    textAlign: "center",
   },
 });

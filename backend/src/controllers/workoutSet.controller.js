@@ -7,7 +7,7 @@ export const addWorkoutSet = async (req, res) => {
     const { itemId } = req.params;
     const { setNumber, reps, weightKg } = req.body;
 
-    if (!setNumber || !reps || weightKg === undefined) {
+    if (setNumber == null || reps == null || weightKg == null) {
       return res.status(400).json({
         message: "setNumber, reps и weightKg обязательны",
       });

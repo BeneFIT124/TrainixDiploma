@@ -12,6 +12,9 @@ import dashboardRoutes from "./routes/dashboard.routes.js";
 import trainerProfileRoutes from "./routes/trainerProfile.routes.js";
 import trainerApplicationRoutes from "./routes/trainerApplication.routes.js";
 import workoutPlanRoutes from "./routes/workoutPlan.routes.js";
+import nutritionPlanRoutes from "./routes/nutritionPlan.routes.js";
+import planRoutes from "./routes/plan.routes.js";
+import statisticsRoutes from "./routes/statistics.routes.js";
 
 const app = express();
 
@@ -34,5 +37,8 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/trainer-profiles", trainerProfileRoutes);
 app.use("/api/trainer-applications", trainerApplicationRoutes);
 app.use("/api/workout-plans", workoutPlanRoutes);
+app.use("/api/nutrition-plans", nutritionPlanRoutes);
+app.use("/api/plans", planRoutes);
+app.use("/api/statistics", statisticsRoutes);
 
 export default app;

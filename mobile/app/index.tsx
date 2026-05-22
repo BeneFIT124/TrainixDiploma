@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { COLORS } from "@/constants/colors";
 
 export default function Index() {
-  const { isLoading, isAuthenticated } = useAuth();
+  const { isLoading, isAuthenticated, user } = useAuth();
 
   if (isLoading) {
     return (
@@ -22,6 +22,10 @@ export default function Index() {
   }
 
   if (isAuthenticated) {
+    if (!user?.weight || !user?.height || !user?.targetCalories) {
+      return <Redirect href="/onboarding" />;
+    }
+
     return <Redirect href="/(tabs)" />;
   }
 

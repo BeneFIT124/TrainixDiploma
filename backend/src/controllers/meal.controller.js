@@ -29,6 +29,22 @@ export const getMeals = async (req, res) => {
   }
 };
 
+export const getMealById = async (req, res) => {
+  try {
+    const { mealId } = req.params;
+
+    const meal = await Meal.findOne({ _id: mealId, user: req.user._id });
+
+    if (!meal) {
+      return res.status(404).json({ message: "Прием пищи не найден" });
+    }
+
+    res.status(200).json(meal);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const addMealItem = async (req, res) => {
   try {
     const { mealId } = req.params;

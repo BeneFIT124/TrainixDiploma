@@ -3,6 +3,7 @@ import { protect } from "../middleware/auth.middleware.js";
 import {
   createWorkout,
   getWorkouts,
+  getLastExerciseSets,
   getWorkoutById,
   updateWorkout,
   deleteWorkout,
@@ -16,6 +17,7 @@ const router = express.Router();
 
 router.post("/", protect, createWorkout);
 router.get("/", protect, getWorkouts);
+router.get("/exercises/:exerciseId/last-sets", protect, getLastExerciseSets);
 router.get("/:id", protect, getWorkoutById);
 router.put("/:id", protect, updateWorkout);
 router.delete("/:id", protect, deleteWorkout);

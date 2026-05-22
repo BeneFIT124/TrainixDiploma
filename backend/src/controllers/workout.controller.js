@@ -38,6 +38,39 @@ export const getWorkouts = async (req, res) => {
   }
 };
 
+export const getLastExerciseSets = async (req, res) => {
+  try {
+    const { exerciseId } = req.params;
+
+    const previousItems = await WorkoutItem.find({
+      exercise: exerciseId,
+    }).sort({ createdAt: -1 });
+
+    for (const item of previousItems) {
+      const workout = await Workout.findOne({
+        _id: item.workout,
+        user: req.user._id,
+      });
+
+      if (!workout) {
+        continue;
+      }
+
+      const sets = await WorkoutSet.find({
+        workoutItem: item._id,
+      }).sort({ setNumber: 1 });
+
+      if (sets.length > 0) {
+        return res.status(200).json(sets);
+      }
+    }
+
+    res.status(200).json([]);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 export const getWorkoutById = async (req, res) => {
   try {
     const workout = await Workout.findOne({

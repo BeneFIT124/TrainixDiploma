@@ -1,0 +1,72 @@
+export const mockWorkouts = [
+  {
+    id: "1",
+    title: "Грудь и трицепс",
+    date: "Сегодня",
+    duration: 62,
+    exercisesCount: 6,
+    status: "completed",
+    calories: 420,
+  },
+  {
+    id: "2",
+    title: "Спина и бицепс",
+    date: "Вчера",
+    duration: 55,
+    exercisesCount: 5,
+    status: "completed",
+    calories: 380,
+  },
+  {
+    id: "3",
+    title: "Ноги",
+    date: "3 дня назад",
+    duration: 70,
+    exercisesCount: 7,
+    status: "completed",
+    calories: 520,
+  },
+];
+
+export const mockExercises = [
+  {
+    id: "1",
+    name: "Жим штанги лёжа",
+    muscleGroup: "Грудь",
+    equipment: "Штанга",
+    defaultSets: 4,
+    defaultReps: 10,
+  },
+  {
+    id: "2",
+    name: "Тяга верхнего блока",
+    muscleGroup: "Спина",
+    equipment: "Тренажёр",
+    defaultSets: 4,
+    defaultReps: 12,
+  },
+  {
+    id: "3",
+    name: "Приседания со штангой",
+    muscleGroup: "Ноги",
+    equipment: "Штанга",
+    defaultSets: 4,
+    defaultReps: 8,
+  },
+  {
+    id: "4",
+    name: "Подъём гантелей на бицепс",
+    muscleGroup: "Бицепс",
+    equipment: "Гантели",
+    defaultSets: 3,
+    defaultReps: 12,
+  },
+  {
+    id: "5",
+    name: "Французский жим",
+    muscleGroup: "Трицепс",
+    equipment: "EZ-гриф",
+    defaultSets: 3,
+    defaultReps: 10,
+  },
+];

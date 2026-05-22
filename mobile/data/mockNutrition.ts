@@ -1,0 +1,82 @@
+export const mockNutritionStats = {
+  caloriesToday: 1840,
+  caloriesTarget: 2500,
+  proteinToday: 128,
+  proteinTarget: 160,
+  fatToday: 56,
+  fatTarget: 80,
+  carbsToday: 210,
+  carbsTarget: 300,
+};
+
+export const mockMeals = [
+  {
+    id: "1",
+    title: "Завтрак",
+    time: "09:30",
+    calories: 520,
+    protein: 32,
+    fat: 18,
+    carbs: 54,
+    itemsCount: 3,
+  },
+  {
+    id: "2",
+    title: "Обед",
+    time: "14:10",
+    calories: 760,
+    protein: 48,
+    fat: 22,
+    carbs: 86,
+    itemsCount: 4,
+  },
+  {
+    id: "3",
+    title: "Перекус",
+    time: "17:40",
+    calories: 310,
+    protein: 22,
+    fat: 8,
+    carbs: 38,
+    itemsCount: 2,
+  },
+];
+
+export const mockFoods = [
+  {
+    id: "1",
+    name: "Куриная грудка",
+    category: "Мясо",
+    calories: 165,
+    protein: 31,
+    fat: 3.6,
+    carbs: 0,
+  },
+  {
+    id: "2",
+    name: "Рис отварной",
+    category: "Крупы",
+    calories: 130,
+    protein: 2.7,
+    fat: 0.3,
+    carbs: 28,
+  },
+  {
+    id: "3",
+    name: "Овсянка",
+    category: "Крупы",
+    calories: 370,
+    protein: 13,
+    fat: 7,
+    carbs: 60,
+  },
+  {
+    id: "4",
+    name: "Банан",
+    category: "Фрукты",
+    calories: 89,
+    protein: 1.1,
+    fat: 0.3,
+    carbs: 23,
+  },
+];
