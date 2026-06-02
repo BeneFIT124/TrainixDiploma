@@ -228,7 +228,7 @@ export default function PurchasedPlanDetailsScreen() {
                 {isNutritionPlan ? "План питания" : "Тренировочный план"}
               </Text>
               <Text style={styles.title}>{plan.title}</Text>
-              <Text style={styles.trainer}>Тренерский план</Text>
+              <Text style={styles.trainer}>Тренер: {getTrainerName(plan)}</Text>
             </GlassCard>
 
             <GlassCard style={styles.card}>

@@ -13,8 +13,6 @@ import GlassCard from "@/components/ui/GlassCard";
 import { COLORS } from "@/constants/colors";
 import { Exercise } from "@/store/workoutBuilderStore";
 
-const availableExercises: Exercise[] = [];
-
 export type PlanWorkoutSet = {
   id: string;
   weight: string;
@@ -34,6 +32,7 @@ export type WorkoutPlanDay = {
 type WorkoutPlanDayEditorProps = {
   day: WorkoutPlanDay;
   dayIndex: number;
+  availableExercises: Exercise[];
   onUpdateDayTitle: (dayId: string, title: string) => void;
   onRemoveDay: (dayId: string) => void;
   onAddExercise: (dayId: string, exercise: Exercise) => void;
@@ -54,6 +53,7 @@ const muscleGroups = ["Все", "Грудь", "Спина", "Ноги", "Биц�
 export default function WorkoutPlanDayEditor({
   day,
   dayIndex,
+  availableExercises,
   onUpdateDayTitle,
   onRemoveDay,
   onAddExercise,
@@ -74,11 +74,12 @@ export default function WorkoutPlanDayEditor({
 
       const matchesMuscleGroup =
         selectedMuscleGroup === "Все" ||
-        exercise.muscleGroup === selectedMuscleGroup;
+        exercise.muscleGroup === selectedMuscleGroup ||
+        exercise.primaryMuscleGroup === selectedMuscleGroup;
 
       return matchesSearch && matchesMuscleGroup;
     });
-  }, [searchQuery, selectedMuscleGroup]);
+  }, [availableExercises, searchQuery, selectedMuscleGroup]);
 
   const isExerciseAdded = (exerciseId: string) => {
     return day.exercises.some((exercise) => exercise.id === exerciseId);

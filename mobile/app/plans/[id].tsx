@@ -18,6 +18,11 @@ import AppButton from "@/components/ui/AppButton";
 import { COLORS } from "@/constants/colors";
 import { getPlanById, PlanType, PublicPlan, purchasePlan } from "@/services/planService";
 
+const getTrainerName = (plan: PublicPlan) => {
+  const username = plan.trainerProfile?.user?.username;
+  return typeof username === "string" && username.trim() ? username : "Тренер";
+};
+
 const planTypeLabel = {
   workout: "Тренировочный план",
   nutrition: "План питания",
@@ -151,6 +156,7 @@ export default function PlanDetailsScreen() {
 
               <Text style={styles.planType}>{planTypeLabel[plan.type]}</Text>
               <Text style={styles.title}>{plan.title}</Text>
+              <Text style={styles.trainer}>Тренер: {getTrainerName(plan)}</Text>
 
               <View style={styles.badgesRow}>
                 <View style={styles.badge}>
@@ -253,6 +259,12 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "900",
     textAlign: "center",
+    marginBottom: 8,
+  },
+  trainer: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: "800",
     marginBottom: 16,
   },
   badgesRow: {

@@ -11,6 +11,11 @@ import PurchasedPlanCard from "@/components/profile/PurchasedPlanCard";
 import { COLORS } from "@/constants/colors";
 import { getMyPurchasedPlans, PurchasedPlan } from "@/services/planService";
 
+const getTrainerName = (purchase: PurchasedPlan) => {
+  const username = purchase.plan.trainerProfile?.user?.username;
+  return typeof username === "string" && username.trim() ? username : "Тренер";
+};
+
 const planTypeLabel = {
   workout: "Тренировочный план",
   nutrition: "План питания",
@@ -96,7 +101,7 @@ export default function MyPlansScreen() {
               key={purchase.purchaseId}
               title={purchase.plan.title}
               type={planTypeLabel[purchase.plan.type]}
-              trainerName="Тренер"
+              trainerName={getTrainerName(purchase)}
               purchaseDate={new Date(purchase.purchaseDate).toLocaleDateString(
                 "ru-RU"
               )}

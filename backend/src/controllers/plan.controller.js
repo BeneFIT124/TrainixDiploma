@@ -4,6 +4,11 @@ import PlanPurchase from "../models/PlanPurchase.js";
 import WorkoutPlan from "../models/WorkoutPlan.js";
 import WorkoutPlanItem from "../models/WorkoutPlanItem.js";
 
+const trainerProfilePopulate = {
+  path: "trainerProfile",
+  populate: { path: "user", select: "username email avatarUrl role" },
+};
+
 const serializeWorkoutPlan = (plan, items = []) => ({
   id: plan._id,
   _id: plan._id,
@@ -42,10 +47,10 @@ export const getPlans = async (req, res) => {
   try {
     const [workoutPlans, nutritionPlans] = await Promise.all([
       WorkoutPlan.find({ isActive: true })
-        .populate("trainerProfile")
+        .populate(trainerProfilePopulate)
         .sort({ createdAt: -1 }),
       NutritionPlan.find({ isActive: true })
-        .populate("trainerProfile")
+        .populate(trainerProfilePopulate)
         .sort({ createdAt: -1 }),
     ]);
 
@@ -63,7 +68,7 @@ export const getPlanById = async (req, res) => {
     const { type, id } = req.params;
 
     if (type === "workout") {
-      const plan = await WorkoutPlan.findById(id).populate("trainerProfile");
+      const plan = await WorkoutPlan.findById(id).populate(trainerProfilePopulate);
 
       if (!plan) {
         return res.status(404).json({ message: "План не найден" });
@@ -77,7 +82,7 @@ export const getPlanById = async (req, res) => {
     }
 
     if (type === "nutrition") {
-      const plan = await NutritionPlan.findById(id).populate("trainerProfile");
+      const plan = await NutritionPlan.findById(id).populate(trainerProfilePopulate);
 
       if (!plan) {
         return res.status(404).json({ message: "План не найден" });
@@ -101,13 +106,17 @@ export const getTrainerPlans = async (req, res) => {
     const { trainerProfileId } = req.params;
 
     const [workoutPlans, nutritionPlans] = await Promise.all([
-      WorkoutPlan.find({ trainerProfile: trainerProfileId, isActive: true }).sort({
-        createdAt: -1,
-      }),
+      WorkoutPlan.find({ trainerProfile: trainerProfileId, isActive: true })
+        .populate(trainerProfilePopulate)
+        .sort({
+          createdAt: -1,
+        }),
       NutritionPlan.find({
         trainerProfile: trainerProfileId,
         isActive: true,
-      }).sort({ createdAt: -1 }),
+      })
+        .populate(trainerProfilePopulate)
+        .sort({ createdAt: -1 }),
     ]);
 
     res.status(200).json([
@@ -173,11 +182,11 @@ export const getMyPurchasedPlans = async (req, res) => {
     })
       .populate({
         path: "workoutPlan",
-        populate: { path: "trainerProfile" },
+        populate: trainerProfilePopulate,
       })
       .populate({
         path: "nutritionPlan",
-        populate: { path: "trainerProfile" },
+        populate: trainerProfilePopulate,
       })
       .sort({ createdAt: -1 });
 

@@ -13,8 +13,6 @@ import GlassCard from "@/components/ui/GlassCard";
 import { COLORS } from "@/constants/colors";
 import { Food } from "@/store/mealBuilderStore";
 
-const availableFoods: Food[] = [];
-
 export type PlanMealFood = Food & {
   grams: number;
 };
@@ -34,6 +32,7 @@ export type NutritionPlanDay = {
 type NutritionPlanDayEditorProps = {
   day: NutritionPlanDay;
   dayIndex: number;
+  availableFoods: Food[];
   onUpdateDayTitle: (dayId: string, title: string) => void;
   onRemoveDay: (dayId: string) => void;
   onAddMeal: (dayId: string, mealType: string) => void;
@@ -54,6 +53,7 @@ const foodCategories = ["Все", "Мясо", "Крупы", "Фрукты"];
 export default function NutritionPlanDayEditor({
   day,
   dayIndex,
+  availableFoods,
   onUpdateDayTitle,
   onRemoveDay,
   onAddMeal,
@@ -77,7 +77,7 @@ export default function NutritionPlanDayEditor({
 
       return matchesSearch && matchesCategory;
     });
-  }, [searchQuery, selectedCategory]);
+  }, [availableFoods, searchQuery, selectedCategory]);
 
   const existingMealTypes = day.meals.map((meal) => meal.mealType);
 

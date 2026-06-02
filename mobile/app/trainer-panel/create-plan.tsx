@@ -2,13 +2,14 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
   Alert,
+  ActivityIndicator,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from "react-native";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import ScreenContainer from "@/components/ui/ScreenContainer";
 import GlassCard from "@/components/ui/GlassCard";
@@ -29,6 +30,8 @@ import {
   createNutritionPlan,
   createWorkoutPlan,
 } from "@/services/planService";
+import { getFoods } from "@/services/nutritionService";
+import { getExercises } from "@/services/workoutService";
 
 const planTypes = ["Тренировочный план", "План питания"];
 
@@ -50,6 +53,10 @@ export default function CreateTrainerPlanScreen() {
   const [duration, setDuration] = useState("");
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
+  const [availableExercises, setAvailableExercises] = useState<Exercise[]>([]);
+  const [availableFoods, setAvailableFoods] = useState<Food[]>([]);
+  const [isCatalogLoading, setIsCatalogLoading] = useState(true);
+  const [catalogError, setCatalogError] = useState<string | null>(null);
 
   const [workoutDays, setWorkoutDays] = useState<WorkoutPlanDay[]>([
     {
@@ -66,6 +73,50 @@ export default function CreateTrainerPlanScreen() {
       meals: [],
     },
   ]);
+
+  const loadCatalogs = async () => {
+    try {
+      setIsCatalogLoading(true);
+      setCatalogError(null);
+
+      const [exercisesData, foodsData] = await Promise.all([
+        getExercises(),
+        getFoods(),
+      ]);
+
+      setAvailableExercises(
+        exercisesData.map((exercise) => ({
+          ...exercise,
+          id: exercise._id || exercise.id,
+          muscleGroup: exercise.primaryMuscleGroup || exercise.muscleGroup,
+          equipment: exercise.equipment || "Не указано",
+          defaultSets: exercise.defaultSets || 3,
+          defaultReps: exercise.defaultReps || 10,
+        }))
+      );
+
+      setAvailableFoods(
+        foodsData
+          .filter((food) => food._id || food.id)
+          .map((food) => ({
+            ...food,
+            id: food._id || food.id || food.name,
+          }))
+      );
+    } catch (loadError) {
+      setCatalogError(
+        loadError instanceof Error
+          ? loadError.message
+          : "Не удалось загрузить упражнения и продукты"
+      );
+    } finally {
+      setIsCatalogLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadCatalogs();
+  }, []);
 
   const addWorkoutDay = () => {
     setWorkoutDays((prev) => [
@@ -698,7 +749,20 @@ export default function CreateTrainerPlanScreen() {
           />
         </GlassCard>
 
-        {selectedType === "Тренировочный план" ? (
+        {isCatalogLoading ? (
+          <GlassCard style={styles.stateCard}>
+            <ActivityIndicator color={COLORS.primary} />
+            <Text style={styles.stateText}>Загружаем упражнения и продукты...</Text>
+          </GlassCard>
+        ) : catalogError ? (
+          <GlassCard style={styles.stateCard}>
+            <Text style={styles.emptyTitle}>Не удалось загрузить справочники</Text>
+            <Text style={styles.emptyText}>{catalogError}</Text>
+            <AppButton title="Повторить" onPress={loadCatalogs} />
+          </GlassCard>
+        ) : null}
+
+        {!isCatalogLoading && !catalogError && selectedType === "Тренировочный план" ? (
           <>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Тренировочные дни</Text>
@@ -714,6 +778,7 @@ export default function CreateTrainerPlanScreen() {
                 key={day.id}
                 day={day}
                 dayIndex={index}
+                availableExercises={availableExercises}
                 onUpdateDayTitle={updateWorkoutDayTitle}
                 onRemoveDay={removeWorkoutDay}
                 onAddExercise={addExerciseToDay}
@@ -724,7 +789,7 @@ export default function CreateTrainerPlanScreen() {
               />
             ))}
           </>
-        ) : (
+        ) : !isCatalogLoading && !catalogError ? (
           <>
             <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Дни питания</Text>
@@ -740,6 +805,7 @@ export default function CreateTrainerPlanScreen() {
                 key={day.id}
                 day={day}
                 dayIndex={index}
+                availableFoods={availableFoods}
                 onUpdateDayTitle={updateNutritionDayTitle}
                 onRemoveDay={removeNutritionDay}
                 onAddMeal={addMealToDay}
@@ -750,7 +816,7 @@ export default function CreateTrainerPlanScreen() {
               />
             ))}
           </>
-        )}
+        ) : null}
 
         <AppButton
           title="Сохранить план"
@@ -862,6 +928,28 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
     fontSize: 13,
     fontWeight: "900",
+  },
+  stateCard: {
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 18,
+  },
+  stateText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    fontWeight: "700",
+  },
+  emptyTitle: {
+    color: COLORS.text,
+    fontSize: 19,
+    fontWeight: "900",
+    textAlign: "center",
+  },
+  emptyText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    lineHeight: 21,
+    textAlign: "center",
   },
   saveButton: {
     marginTop: 8,

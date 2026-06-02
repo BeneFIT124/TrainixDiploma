@@ -28,16 +28,7 @@ export async function apiRequest<T>(
     },
   });
 
-  const text = await response.text();
-  const data = text
-    ? (() => {
-        try {
-          return JSON.parse(text);
-        } catch {
-          return null;
-        }
-      })()
-    : null;
+  const data = await response.json().catch(() => null);
 
   if (!response.ok) {
     throw new Error(

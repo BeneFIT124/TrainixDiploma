@@ -10,6 +10,7 @@ type PlanCardProps = {
   difficulty: string;
   duration: string;
   price: number;
+  trainerName?: string;
   onPress?: () => void;
 };
 
@@ -19,6 +20,7 @@ export default function PlanCard({
   difficulty,
   duration,
   price,
+  trainerName,
   onPress,
 }: PlanCardProps) {
   const iconName =
@@ -35,6 +37,9 @@ export default function PlanCard({
           <View style={styles.info}>
             <Text style={styles.title}>{title}</Text>
             <Text style={styles.type}>{type}</Text>
+            {trainerName ? (
+              <Text style={styles.trainer}>Тренер: {trainerName}</Text>
+            ) : null}
           </View>
 
           <Text style={styles.price}>{price} ₽</Text>
@@ -84,6 +89,12 @@ const styles = StyleSheet.create({
   type: {
     color: COLORS.textSecondary,
     fontSize: 13,
+  },
+  trainer: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    marginTop: 3,
+    fontWeight: "700",
   },
   price: {
     color: COLORS.primary,

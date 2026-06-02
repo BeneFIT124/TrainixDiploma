@@ -51,7 +51,9 @@ export default function TrainerCard({
             <Text style={styles.specialization}>{specialization}</Text>
           </View>
 
-          <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
+          {onPress ? (
+            <Ionicons name="chevron-forward" size={20} color={COLORS.textMuted} />
+          ) : null}
         </View>
 
         <View style={styles.metaRow}>
