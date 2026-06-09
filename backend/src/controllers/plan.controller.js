@@ -9,6 +9,33 @@ const trainerProfilePopulate = {
   populate: { path: "user", select: "username email avatarUrl role" },
 };
 
+const buildWorkoutPlanDays = (plan, items = []) => {
+  const days = items.reduce((groups, item) => {
+    const dayNumber = item.dayNumber || 1;
+    const dayItems = groups.get(dayNumber) || [];
+    dayItems.push(item);
+    groups.set(dayNumber, dayItems);
+    return groups;
+  }, new Map());
+
+  return Array.from(days.entries())
+    .sort(([first], [second]) => first - second)
+    .map(([dayNumber, dayItems]) => ({
+      id: `${plan._id}-day-${dayNumber}`,
+      dayNumber,
+      title: `День ${dayNumber}`,
+      exercises: dayItems
+        .sort((first, second) => (first.exerciseOrder || 1) - (second.exerciseOrder || 1))
+        .map((item) => ({
+          exercise: item.exercise,
+          exerciseOrder: item.exerciseOrder,
+          setsCount: item.sets,
+          reps: item.reps,
+          comment: item.comment,
+        })),
+    }));
+};
+
 const serializeWorkoutPlan = (plan, items = []) => ({
   id: plan._id,
   _id: plan._id,
@@ -22,6 +49,7 @@ const serializeWorkoutPlan = (plan, items = []) => ({
   isActive: plan.isActive,
   trainerProfile: plan.trainerProfile,
   items,
+  days: buildWorkoutPlanDays(plan, items),
   createdAt: plan.createdAt,
 });
 

@@ -106,29 +106,35 @@ export default function WorkoutsScreen() {
 
             <Text style={styles.planDaysTitle}>Выбери день плана</Text>
 
-            {activeWorkoutPlan.days.map((day) => (
-              <Pressable
-                key={day.id}
-                onPress={() => handleStartPlanDay(day)}
-                style={({ pressed }) => [
-                  styles.planDayButton,
-                  pressed && styles.pressed,
-                ]}
-              >
-                <View style={styles.planDayInfo}>
-                  <Text style={styles.planDayTitle}>{day.title}</Text>
-                  <Text style={styles.planDayMeta}>
-                    {day.exercises.length} упражнений
-                  </Text>
-                </View>
+            {activeWorkoutPlan.days.length === 0 ? (
+              <Text style={styles.planEmptyText}>
+                В активном плане пока нет дней
+              </Text>
+            ) : (
+              activeWorkoutPlan.days.map((day) => (
+                <Pressable
+                  key={day.id}
+                  onPress={() => handleStartPlanDay(day)}
+                  style={({ pressed }) => [
+                    styles.planDayButton,
+                    pressed && styles.pressed,
+                  ]}
+                >
+                  <View style={styles.planDayInfo}>
+                    <Text style={styles.planDayTitle}>{day.title}</Text>
+                    <Text style={styles.planDayMeta}>
+                      {day.exercises.length} упражнений
+                    </Text>
+                  </View>
 
-                <Ionicons
-                  name="chevron-forward"
-                  size={20}
-                  color={COLORS.textMuted}
-                />
-              </Pressable>
-            ))}
+                  <Ionicons
+                    name="chevron-forward"
+                    size={20}
+                    color={COLORS.textMuted}
+                  />
+                </Pressable>
+              ))
+            )}
           </GlassCard>
         )}
 
@@ -279,6 +285,11 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 12,
     fontWeight: "700",
+  },
+  planEmptyText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    lineHeight: 21,
   },
   statsRow: {
     flexDirection: "row",

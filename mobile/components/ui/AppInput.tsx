@@ -13,14 +13,14 @@ type AppInputProps = TextInputProps & {
   error?: string;
 };
 
-export default function AppInput({ label, error, ...props }: AppInputProps) {
+export default function AppInput({ label, error, style, ...props }: AppInputProps) {
   return (
     <View style={styles.wrapper}>
       {label && <Text style={styles.label}>{label}</Text>}
 
       <TextInput
         placeholderTextColor={COLORS.textMuted}
-        style={[styles.input, error && styles.inputError]}
+        style={[styles.input, props.multiline && styles.multiline, error && styles.inputError, style]}
         {...props}
       />
 
@@ -49,6 +49,11 @@ const styles = StyleSheet.create({
     borderColor: COLORS.border,
     color: COLORS.text,
     fontSize: 16,
+  },
+  multiline: {
+    minHeight: 110,
+    paddingTop: 14,
+    textAlignVertical: "top",
   },
   inputError: {
     borderColor: COLORS.error,

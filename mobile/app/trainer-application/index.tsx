@@ -16,6 +16,7 @@ import AppInput from "@/components/ui/AppInput";
 import AppButton from "@/components/ui/AppButton";
 
 import { COLORS } from "@/constants/colors";
+import { createTrainerApplication } from "@/services/trainerApplicationService";
 
 export default function TrainerApplicationScreen() {
   const [experience, setExperience] = useState("");
@@ -23,17 +24,18 @@ export default function TrainerApplicationScreen() {
   const [education, setEducation] = useState("");
   const [about, setAbout] = useState("");
   const [documentsAdded, setDocumentsAdded] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleAddDocuments = () => {
     setDocumentsAdded(true);
 
     Alert.alert(
       "Документы добавлены",
-      "Файлы добавлены в моковом режиме. Позже здесь будет загрузка документов на сервер."
+      "Файлы добавлены в демо-режиме. Позже здесь будет загрузка документов на сервер."
     );
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!experience.trim()) {
       Alert.alert("Ошибка", "Укажи опыт работы");
       return;
@@ -59,16 +61,39 @@ export default function TrainerApplicationScreen() {
       return;
     }
 
-    Alert.alert(
-      "Заявка отправлена",
-      "Заявка на получение статуса тренера отправлена на проверку в моковом режиме.",
-      [
-        {
-          text: "Ок",
-          onPress: () => router.back(),
-        },
-      ]
-    );
+    try {
+      setIsSubmitting(true);
+
+      await createTrainerApplication({
+        educationDocumentUrl: "demo://education-document",
+        certificateDocumentUrl: "demo://certificate-document",
+        identityDocumentUrl: "demo://identity-document",
+        comment: [
+          `Опыт: ${experience.trim()}`,
+          `Специализация: ${specialization.trim()}`,
+          `Образование: ${education.trim()}`,
+          `О себе: ${about.trim()}`,
+        ].join("\n"),
+      });
+
+      Alert.alert(
+        "Заявка отправлена",
+        "Заявка на получение статуса тренера отправлена на проверку.",
+        [
+          {
+            text: "Ок",
+            onPress: () => router.back(),
+          },
+        ]
+      );
+    } catch (error) {
+      Alert.alert(
+        "Ошибка",
+        error instanceof Error ? error.message : "Не удалось отправить заявку"
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -97,7 +122,7 @@ export default function TrainerApplicationScreen() {
 
           <Text style={styles.infoTitle}>Проверка специалиста</Text>
           <Text style={styles.infoText}>
-            Статус тренера выдаётся после проверки опыта, документов и
+            Статус тренера выдается после проверки опыта, документов и
             подтверждения квалификации. После одобрения тренер сможет создавать
             и продавать планы тренировок и питания.
           </Text>
@@ -131,6 +156,7 @@ export default function TrainerApplicationScreen() {
             value={about}
             onChangeText={setAbout}
             multiline
+            style={styles.multilineInput}
           />
         </GlassCard>
 
@@ -170,14 +196,14 @@ export default function TrainerApplicationScreen() {
             <View style={styles.stepNumber}>
               <Text style={styles.stepNumberText}>1</Text>
             </View>
-            <Text style={styles.stepText}>Заявка попадает на проверку</Text>
+            <Text style={styles.stepText}>Заявка попадет на проверку</Text>
           </View>
 
           <View style={styles.stepRow}>
             <View style={styles.stepNumber}>
               <Text style={styles.stepNumberText}>2</Text>
             </View>
-            <Text style={styles.stepText}>Администратор проверяет документы</Text>
+            <Text style={styles.stepText}>Администратор проверит документы</Text>
           </View>
 
           <View style={styles.stepRow}>
@@ -185,12 +211,16 @@ export default function TrainerApplicationScreen() {
               <Text style={styles.stepNumberText}>3</Text>
             </View>
             <Text style={styles.stepText}>
-              После одобрения пользователь получает роль тренера
+              После одобрения пользователь получит роль тренера
             </Text>
           </View>
         </GlassCard>
 
-        <AppButton title="Отправить заявку" onPress={handleSubmit} />
+        <AppButton
+          title="Отправить заявку"
+          onPress={handleSubmit}
+          loading={isSubmitting}
+        />
       </ScrollView>
     </ScreenContainer>
   );
@@ -256,6 +286,11 @@ const styles = StyleSheet.create({
   },
   formCard: {
     marginBottom: 24,
+  },
+  multilineInput: {
+    minHeight: 110,
+    textAlignVertical: "top",
+    paddingTop: 14,
   },
   sectionTitle: {
     color: COLORS.text,

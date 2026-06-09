@@ -107,7 +107,13 @@ export default function MyPlansScreen() {
               )}
               status={purchase.status === "active" ? "Активен" : purchase.status}
               onPress={() =>
-                router.push(`/profile/plans/${purchase.plan.type}-${purchase.plan.id}`)
+                router.push({
+                  pathname: "/profile/plans/[id]",
+                  params: {
+                    id: `${purchase.plan.type}-${purchase.plan.id}`,
+                    purchaseId: purchase.purchaseId,
+                  },
+                })
               }
             />
           ))

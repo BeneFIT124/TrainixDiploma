@@ -15,6 +15,7 @@ import workoutPlanRoutes from "./routes/workoutPlan.routes.js";
 import nutritionPlanRoutes from "./routes/nutritionPlan.routes.js";
 import planRoutes from "./routes/plan.routes.js";
 import statisticsRoutes from "./routes/statistics.routes.js";
+import reviewRoutes from "./routes/review.routes.js";
 
 const app = express();
 
@@ -40,5 +41,6 @@ app.use("/api/workout-plans", workoutPlanRoutes);
 app.use("/api/nutrition-plans", nutritionPlanRoutes);
 app.use("/api/plans", planRoutes);
 app.use("/api/statistics", statisticsRoutes);
+app.use("/api/reviews", reviewRoutes);
 
 export default app;

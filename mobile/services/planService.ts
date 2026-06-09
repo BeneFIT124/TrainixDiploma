@@ -19,6 +19,7 @@ export type PublicPlan = {
   isActive: boolean;
   trainerProfile?: any;
   items?: any[];
+  days?: any[];
   createdAt?: string;
 };
 

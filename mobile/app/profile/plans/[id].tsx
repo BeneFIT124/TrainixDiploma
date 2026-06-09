@@ -32,6 +32,39 @@ const getTrainerName = (plan: PublicPlan) => {
 };
 
 const buildWorkoutPlanDays = (plan: PublicPlan) => {
+  if (Array.isArray(plan.days) && plan.days.length > 0) {
+    return plan.days.map((day, index) => ({
+      id: String(day.id || day._id || `${plan.id}-day-${index + 1}`),
+      title: day.title || `День ${day.dayNumber || index + 1}`,
+      exercises: (day.exercises || []).map((exerciseItem: any) => {
+        const exercise = exerciseItem.exercise || exerciseItem;
+        const exerciseId = exercise?._id || exercise?.id || exerciseItem.exerciseId;
+
+        return {
+          id: String(exerciseId || `${plan.id}-${index}-${exerciseItem.name}`),
+          name: exercise?.name || exerciseItem.name || "Упражнение",
+          muscleGroup:
+            exercise?.primaryMuscleGroup ||
+            exercise?.muscleGroup ||
+            exerciseItem.muscleGroup ||
+            "Не указано",
+          equipment: exercise?.equipment || exerciseItem.equipment || "Не указано",
+          sets: (exerciseItem.sets || []).length
+            ? exerciseItem.sets.map((setItem: any, setIndex: number) => ({
+                order: setItem.order || setIndex + 1,
+                weight: setItem.weight || 0,
+                reps: setItem.reps || 10,
+              }))
+            : Array.from({ length: exerciseItem.setsCount || 1 }, (_, setIndex) => ({
+                order: setIndex + 1,
+                weight: 0,
+                reps: exerciseItem.reps || 10,
+              })),
+        };
+      }),
+    }));
+  }
+
   const days = new Map<number, any[]>();
 
   (plan.items || []).forEach((item) => {
@@ -49,7 +82,7 @@ const buildWorkoutPlanDays = (plan: PublicPlan) => {
       exercises: items
         .sort((first, second) => (first.exerciseOrder || 1) - (second.exerciseOrder || 1))
         .map((item) => ({
-          id: item.exercise?._id || item.exercise?.id || item.exercise,
+          id: String(item.exercise?._id || item.exercise?.id || item.exercise),
           name: item.exercise?.name || "Упражнение",
           muscleGroup:
             item.exercise?.primaryMuscleGroup ||
@@ -99,7 +132,7 @@ const buildNutritionPlanDays = (plan: PublicPlan) => {
 };
 
 export default function PurchasedPlanDetailsScreen() {
-  const { id } = useLocalSearchParams();
+  const { id, purchaseId } = useLocalSearchParams();
   const [plan, setPlan] = useState<PublicPlan | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -187,6 +220,10 @@ export default function PurchasedPlanDetailsScreen() {
   };
 
   const isNutritionPlan = plan?.type === "nutrition";
+  const currentPurchaseId = Array.isArray(purchaseId) ? purchaseId[0] : purchaseId;
+  const trainerProfileId = plan
+    ? String(plan.trainerProfile?._id || plan.trainerProfile?.id || "")
+    : "";
 
   return (
     <ScreenContainer>
@@ -248,6 +285,23 @@ export default function PurchasedPlanDetailsScreen() {
               variant={active ? "secondary" : undefined}
               style={styles.activateButton}
             />
+
+            {currentPurchaseId && trainerProfileId ? (
+              <AppButton
+                title="Оставить отзыв"
+                onPress={() =>
+                  router.push({
+                    pathname: "/reviews/create",
+                    params: {
+                      purchaseId: currentPurchaseId,
+                      trainerProfileId,
+                    },
+                  })
+                }
+                variant="secondary"
+                style={styles.reviewButton}
+              />
+            ) : null}
           </>
         )}
       </ScrollView>
@@ -329,6 +383,9 @@ const styles = StyleSheet.create({
   },
   activateButton: {
     marginTop: 8,
+  },
+  reviewButton: {
+    marginTop: 12,
   },
   stateCard: {
     alignItems: "center",

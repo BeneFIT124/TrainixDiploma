@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import {
   ActivityIndicator,
@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 
 import ScreenContainer from "@/components/ui/ScreenContainer";
 import GlassCard from "@/components/ui/GlassCard";
@@ -25,6 +25,7 @@ import {
   getTrainerProfileById,
   TrainerProfile,
 } from "@/services/trainerService";
+import { getTrainerReviews, Review } from "@/services/reviewService";
 
 const planTypeLabel = {
   workout: "Тренировочный план",
@@ -96,6 +97,7 @@ export default function TrainerDetailsScreen() {
 
   const [trainer, setTrainer] = useState<TrainerProfile | null>(null);
   const [plans, setPlans] = useState<PublicPlan[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -110,15 +112,18 @@ export default function TrainerDetailsScreen() {
       setIsLoading(true);
       setError(null);
 
-      const [trainerResult, trainerPlansResult] = await Promise.allSettled([
+      const [trainerResult, trainerPlansResult, reviewsResult] = await Promise.allSettled([
         getTrainerProfileById(String(trainerId)),
         getTrainerPublicPlans(String(trainerId)),
+        getTrainerReviews(String(trainerId)),
       ]);
 
       let trainerData =
         trainerResult.status === "fulfilled" ? trainerResult.value : null;
       let trainerPlans =
         trainerPlansResult.status === "fulfilled" ? trainerPlansResult.value : [];
+      const trainerReviews =
+        reviewsResult.status === "fulfilled" ? reviewsResult.value : [];
       const embeddedPlans = getTrainerEmbeddedPlans(trainerData);
 
       if (trainerPlans.length === 0 && embeddedPlans.length > 0) {
@@ -152,6 +157,7 @@ export default function TrainerDetailsScreen() {
 
       setTrainer(trainerData);
       setPlans(trainerPlans);
+      setReviews(trainerReviews);
     } catch (loadError) {
       setError(
         loadError instanceof Error
@@ -163,9 +169,11 @@ export default function TrainerDetailsScreen() {
     }
   }, [trainerId]);
 
-  useEffect(() => {
-    loadTrainer();
-  }, [loadTrainer]);
+  useFocusEffect(
+    useCallback(() => {
+      loadTrainer();
+    }, [loadTrainer])
+  );
 
   const user = getTrainerUser(trainer);
   const trainerName = user?.username || "Тренер";
@@ -276,6 +284,33 @@ export default function TrainerDetailsScreen() {
                   trainerName={trainerName}
                   onPress={() => router.push(`/plans/${plan.type}-${plan.id}`)}
                 />
+              ))
+            )}
+
+            <Text style={styles.sectionTitle}>Отзывы</Text>
+
+            {reviews.length === 0 ? (
+              <GlassCard style={styles.stateCard}>
+                <Text style={styles.emptyTitle}>Отзывов пока нет</Text>
+              </GlassCard>
+            ) : (
+              reviews.map((review) => (
+                <GlassCard key={review._id} style={styles.reviewCard}>
+                  <View style={styles.reviewHeader}>
+                    <View>
+                      <Text style={styles.reviewAuthor}>
+                        {review.user?.username || "Пользователь"}
+                      </Text>
+                      <Text style={styles.reviewDate}>
+                        {new Date(review.createdAt).toLocaleDateString("ru-RU")}
+                      </Text>
+                    </View>
+
+                    <Text style={styles.reviewRating}>★ {review.rating}</Text>
+                  </View>
+
+                  <Text style={styles.reviewText}>{review.text}</Text>
+                </GlassCard>
               ))
             )}
           </>
@@ -390,7 +425,39 @@ const styles = StyleSheet.create({
     color: COLORS.text,
     fontSize: 21,
     fontWeight: "900",
+    marginTop: 4,
     marginBottom: 14,
+  },
+  reviewCard: {
+    marginBottom: 14,
+  },
+  reviewHeader: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    justifyContent: "space-between",
+    gap: 12,
+    marginBottom: 10,
+  },
+  reviewAuthor: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 3,
+  },
+  reviewDate: {
+    color: COLORS.textMuted,
+    fontSize: 12,
+    fontWeight: "700",
+  },
+  reviewRating: {
+    color: COLORS.primary,
+    fontSize: 16,
+    fontWeight: "900",
+  },
+  reviewText: {
+    color: COLORS.textSecondary,
+    fontSize: 15,
+    lineHeight: 21,
   },
   stateCard: {
     alignItems: "center",

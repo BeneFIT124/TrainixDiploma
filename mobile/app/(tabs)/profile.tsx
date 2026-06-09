@@ -10,6 +10,7 @@ import ProfileInfoCard from "@/components/profile/ProfileInfoCard";
 import { COLORS } from "@/constants/colors";
 import { useAuth } from "@/contexts/AuthContext";
 import { becomeTrainerDemo } from "@/services/userService";
+import { getActivityLevelLabel } from "@/utils/activityLevel";
 
 export default function ProfileScreen() {
   const { user, logout, updateUser } = useAuth();
@@ -97,7 +98,7 @@ export default function ProfileScreen() {
 
           <ProfileInfoCard
             title="Активность"
-            value={user?.activityLevel || "—"}
+            value={getActivityLevelLabel(user?.activityLevel)}
             subtitle={user?.activityLevel ? "уровень" : "не указана"}
           />
         </View>
@@ -139,10 +140,18 @@ export default function ProfileScreen() {
           />
 
           {user?.role === "trainer" || user?.role === "admin" ? null : (
-            <AppButton
-              title="Демо: стать тренером"
-              onPress={handleBecomeTrainerDemo}
-            />
+            <>
+              <AppButton
+                title="Стать тренером"
+                onPress={() => router.push("/trainer-application")}
+              />
+
+              <AppButton
+                title="Демо: стать тренером"
+                onPress={handleBecomeTrainerDemo}
+                variant="secondary"
+              />
+            </>
           )}
 
           {user?.role === "trainer" || user?.role === "admin" ? (
