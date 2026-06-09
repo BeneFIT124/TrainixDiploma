@@ -1,28 +1,44 @@
 import mongoose from "mongoose";
 
 const MUSCLE_GROUPS = [
-  "chest",
-  "upper_chest",
-  "lower_chest",
-  "back",
-  "lats",
-  "traps",
-  "lower_back",
-  "shoulders",
-  "front_delts",
-  "middle_delts",
-  "rear_delts",
-  "biceps",
-  "triceps",
-  "forearms",
-  "abs",
-  "obliques",
-  "glutes",
-  "quads",
-  "hamstrings",
-  "calves",
-  "cardio",
-  "full_body",
+  "Грудные мышцы",
+  "Верх груди",
+  "Низ груди",
+  "Спина",
+  "Широчайшие мышцы",
+  "Трапеции",
+  "Поясница",
+  "Плечи",
+  "Передняя дельта",
+  "Средняя дельта",
+  "Задняя дельта",
+  "Бицепс",
+  "Трицепс",
+  "Предплечья",
+  "Пресс",
+  "Косые мышцы живота",
+  "Ягодицы",
+  "Квадрицепс",
+  "Бицепс бедра",
+  "Икры",
+  "Кардио",
+  "Все тело"
+];
+
+const EQUIPMENT_TYPES = [
+  "Штанга",
+  "Гантели",
+  "Тренажер",
+  "Блочный тренажер",
+  "Собственный вес",
+  "Скамья",
+  "Турник",
+  "Брусья",
+  "Кроссовер",
+  "Кардиотренажер",
+  "Гиря",
+  "Эспандер",
+  "Без оборудования"
 ];
 
 const exerciseSchema = new mongoose.Schema(
@@ -34,11 +50,13 @@ const exerciseSchema = new mongoose.Schema(
       minlength: 2,
       maxlength: 100,
     },
+
     primaryMuscleGroup: {
       type: String,
       required: true,
       enum: MUSCLE_GROUPS,
     },
+
     secondaryMuscleGroups: {
       type: [String],
       enum: MUSCLE_GROUPS,
@@ -50,23 +68,17 @@ const exerciseSchema = new mongoose.Schema(
         message: "Можно указать не более 5 дополнительных групп мышц",
       },
     },
+
     description: {
       type: String,
       default: null,
       maxlength: 1000,
     },
+
     equipment: {
       type: String,
-      default: null,
-      enum: [
-        "trainer",
-        "dumbbells",
-        "barbell",
-        "kettlebell",
-        "cable_machine",
-        "bodyweight",
-        "other",
-      ],
+      default: "Без оборудования",
+      enum: EQUIPMENT_TYPES,
     },
   },
   { timestamps: true }
