@@ -45,10 +45,9 @@ const mealSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-mealSchema.pre("validate", function setDateKey(next) {
+mealSchema.pre("validate", function setDateKey() {
   const sourceDate = this.date ? new Date(this.date) : new Date();
   this.dateKey = sourceDate.toISOString().slice(0, 10);
-  next();
 });
 
 mealSchema.index(
