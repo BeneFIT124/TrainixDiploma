@@ -27,6 +27,8 @@ import { COLORS } from "@/constants/colors";
 import { Exercise } from "@/store/workoutBuilderStore";
 import { Food } from "@/store/mealBuilderStore";
 import {
+  addNutritionPlanItem,
+  addWorkoutPlanItem,
   createNutritionPlan,
   createWorkoutPlan,
 } from "@/services/planService";
@@ -34,6 +36,17 @@ import { getFoods } from "@/services/nutritionService";
 import { getExercises } from "@/services/workoutService";
 
 const planTypes = ["Тренировочный план", "План питания"];
+
+const mealTypeToApi: Record<string, string> = {
+  Завтрак: "breakfast",
+  Обед: "lunch",
+  Ужин: "dinner",
+  Перекус: "snack",
+  breakfast: "breakfast",
+  lunch: "lunch",
+  dinner: "dinner",
+  snack: "snack",
+};
 
 const createDefaultSets = (exercise: Exercise): PlanWorkoutSet[] => {
   const setsCount = exercise.defaultSets || 3;
@@ -461,8 +474,6 @@ export default function CreateTrainerPlanScreen() {
     return true;
   };
 
-  // Kept for the next step when plan item editing is wired to real exercises.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const validateWorkoutPlan = () => {
     for (const day of workoutDays) {
       if (!day.title.trim()) {
@@ -502,8 +513,6 @@ export default function CreateTrainerPlanScreen() {
     return true;
   };
 
-  // Kept for the next step when plan item editing is wired to real foods.
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const validateNutritionPlan = () => {
     for (const day of nutritionDays) {
       if (!day.title.trim()) {
@@ -547,6 +556,8 @@ export default function CreateTrainerPlanScreen() {
     const durationWeeks = Number(duration.replace(",", "."));
 
     if (selectedType === "Тренировочный план") {
+      if (!validateWorkoutPlan()) return;
+
       const workoutPlanPayload = {
         type: selectedType,
         title: title.trim(),
@@ -574,7 +585,7 @@ export default function CreateTrainerPlanScreen() {
 
       try {
         setIsSaving(true);
-        await createWorkoutPlan({
+        const createdPlan = await createWorkoutPlan({
           title: workoutPlanPayload.title,
           description: workoutPlanPayload.description,
           durationWeeks: Number.isNaN(durationWeeks) ? workoutDays.length : durationWeeks,
@@ -582,9 +593,26 @@ export default function CreateTrainerPlanScreen() {
           isActive: true,
         });
 
+        for (const [dayIndex, day] of workoutDays.entries()) {
+          for (const [exerciseIndex, exercise] of day.exercises.entries()) {
+            const firstSet = exercise.sets[0];
+            await addWorkoutPlanItem(createdPlan.id, {
+              exerciseId: exercise._id || exercise.id,
+              dayNumber: dayIndex + 1,
+              exerciseOrder: exerciseIndex + 1,
+              sets: exercise.sets.length,
+              reps: Number(firstSet?.reps?.replace(",", ".") || exercise.defaultReps || 10),
+              comment: day.title.trim(),
+            });
+          }
+        }
+
         Alert.alert(
           "Тренировочный план создан",
-          `Дней: ${workoutDays.length}\nСтоимость: ${priceNumber} ₽`,
+          `Дней: ${workoutDays.length}\nУпражнений: ${workoutDays.reduce(
+            (sum, day) => sum + day.exercises.length,
+            0
+          )}\nСтоимость: ${priceNumber} ₽`,
           [
             {
               text: "Ок",
@@ -604,6 +632,8 @@ export default function CreateTrainerPlanScreen() {
       return;
     }
 
+    if (!validateNutritionPlan()) return;
+
     const nutritionPlanPayload = {
       type: selectedType,
       title: title.trim(),
@@ -614,7 +644,7 @@ export default function CreateTrainerPlanScreen() {
         order: dayIndex + 1,
         title: day.title.trim(),
         meals: day.meals.map((meal) => ({
-          mealType: meal.mealType,
+          mealType: mealTypeToApi[meal.mealType] || meal.mealType,
           foods: meal.foods.map((food) => {
             const macros = calculateFoodMacros(food);
 
@@ -634,16 +664,56 @@ export default function CreateTrainerPlanScreen() {
 
     try {
       setIsSaving(true);
-      await createNutritionPlan({
+      const nutritionTotals = nutritionDays.reduce(
+        (totals, day) => {
+          day.meals.forEach((meal) => {
+            meal.foods.forEach((food) => {
+              const macros = calculateFoodMacros(food);
+              totals.calories += macros.calories;
+              totals.protein += macros.protein;
+              totals.fat += macros.fat;
+              totals.carbs += macros.carbs;
+            });
+          });
+
+          return totals;
+        },
+        { calories: 0, protein: 0, fat: 0, carbs: 0 }
+      );
+
+      const createdPlan = await createNutritionPlan({
         title: nutritionPlanPayload.title,
         description: nutritionPlanPayload.description,
         price: priceNumber,
+        dailyCalories: nutritionTotals.calories,
+        dailyProtein: nutritionTotals.protein,
+        dailyFat: nutritionTotals.fat,
+        dailyCarbs: nutritionTotals.carbs,
         isActive: true,
       });
 
+      for (const [dayIndex, day] of nutritionDays.entries()) {
+        for (const meal of day.meals) {
+          for (const [foodIndex, food] of meal.foods.entries()) {
+            await addNutritionPlanItem(createdPlan.id, {
+              foodId: food._id || food.id,
+              dayNumber: dayIndex + 1,
+              mealType: mealTypeToApi[meal.mealType] || meal.mealType,
+              grams: food.grams,
+              itemOrder: foodIndex + 1,
+              comment: day.title.trim(),
+            });
+          }
+        }
+      }
+
       Alert.alert(
         "План питания создан",
-        `Дней: ${nutritionDays.length}\nСтоимость: ${priceNumber} ₽`,
+        `Дней: ${nutritionDays.length}\nПродуктов: ${nutritionDays.reduce(
+          (sum, day) =>
+            sum + day.meals.reduce((mealSum, meal) => mealSum + meal.foods.length, 0),
+          0
+        )}\nСтоимость: ${priceNumber} ₽`,
         [
           {
             text: "Ок",

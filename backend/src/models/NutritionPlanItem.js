@@ -17,6 +17,11 @@ const nutritionPlanItemSchema = new mongoose.Schema(
       ref: "Food",
       required: true,
     },
+    dayNumber: {
+      type: Number,
+      default: 1,
+      min: 1,
+    },
     grams: {
       type: Number,
       required: true,

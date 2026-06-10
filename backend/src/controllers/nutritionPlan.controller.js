@@ -197,7 +197,7 @@ export const deleteNutritionPlan = async (req, res) => {
 export const addNutritionPlanItem = async (req, res) => {
   try {
     const { planId } = req.params;
-    const { mealType, foodId, grams, itemOrder, comment } = req.body;
+    const { mealType, foodId, dayNumber, grams, itemOrder, comment } = req.body;
 
     if (!validateObjectId(planId, res)) {
       return;
@@ -247,6 +247,7 @@ export const addNutritionPlanItem = async (req, res) => {
       nutritionPlan: nutritionPlan._id,
       mealType,
       food: food._id,
+      dayNumber: dayNumber || 1,
       grams,
       calories,
       protein,
@@ -293,7 +294,7 @@ export const getNutritionPlanItems = async (req, res) => {
       nutritionPlan: planId,
     })
       .populate("food")
-      .sort({ mealType: 1, itemOrder: 1, createdAt: 1 });
+      .sort({ dayNumber: 1, mealType: 1, itemOrder: 1, createdAt: 1 });
 
     res.status(200).json(items);
   } catch (error) {

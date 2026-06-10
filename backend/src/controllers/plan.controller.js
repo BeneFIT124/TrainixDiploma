@@ -54,37 +54,47 @@ const buildWorkoutPlanDays = (plan, items = []) => {
 };
 
 const buildNutritionPlanDays = (plan, items = []) => {
-  const meals = items.reduce((groups, item) => {
-    const mealType = item.mealType || "snack";
-    const mealItems = groups.get(mealType) || [];
-    mealItems.push(item);
-    groups.set(mealType, mealItems);
+  const days = items.reduce((groups, item) => {
+    const dayNumber = item.dayNumber || 1;
+    const dayItems = groups.get(dayNumber) || [];
+    dayItems.push(item);
+    groups.set(dayNumber, dayItems);
     return groups;
   }, new Map());
 
-  return [
-    {
-      id: `${plan._id}-day-1`,
-      dayNumber: 1,
-      title: "Рацион",
-      meals: Array.from(meals.entries()).map(([mealType, mealItems]) => ({
-        id: `${plan._id}-${mealType}`,
-        mealType,
-        foods: mealItems
-          .sort((first, second) => (first.itemOrder || 1) - (second.itemOrder || 1))
-          .map((item) => ({
-            food: item.food,
-            grams: item.grams,
-            calories: item.calories,
-            protein: item.protein,
-            fat: item.fat,
-            carbs: item.carbs,
-            itemOrder: item.itemOrder,
-            comment: item.comment,
-          })),
-      })),
-    },
-  ];
+  return Array.from(days.entries())
+    .sort(([first], [second]) => first - second)
+    .map(([dayNumber, dayItems]) => {
+      const meals = dayItems.reduce((groups, item) => {
+        const mealType = item.mealType || "snack";
+        const mealItems = groups.get(mealType) || [];
+        mealItems.push(item);
+        groups.set(mealType, mealItems);
+        return groups;
+      }, new Map());
+
+      return {
+        id: `${plan._id}-day-${dayNumber}`,
+        dayNumber,
+        title: `День ${dayNumber}`,
+        meals: Array.from(meals.entries()).map(([mealType, mealItems]) => ({
+          id: `${plan._id}-${dayNumber}-${mealType}`,
+          mealType,
+          foods: mealItems
+            .sort((first, second) => (first.itemOrder || 1) - (second.itemOrder || 1))
+            .map((item) => ({
+              food: item.food,
+              grams: item.grams,
+              calories: item.calories,
+              protein: item.protein,
+              fat: item.fat,
+              carbs: item.carbs,
+              itemOrder: item.itemOrder,
+              comment: item.comment,
+            })),
+        })),
+      };
+    });
 };
 
 const serializeWorkoutPlan = (plan, items = []) => ({
@@ -175,7 +185,7 @@ export const getPlanById = async (req, res) => {
 
       const items = await NutritionPlanItem.find({ nutritionPlan: plan._id })
         .populate("food")
-        .sort({ mealType: 1, itemOrder: 1, createdAt: 1 });
+        .sort({ dayNumber: 1, mealType: 1, itemOrder: 1, createdAt: 1 });
 
       return res.status(200).json(serializeNutritionPlan(plan, items));
     }
@@ -287,31 +297,43 @@ export const getMyPurchasedPlans = async (req, res) => {
       })
       .sort({ createdAt: -1 });
 
-    res.status(200).json(
-      purchases
-        .map((purchase) => {
+    const serializedPurchases = await Promise.all(
+      purchases.map(async (purchase) => {
           if (purchase.planType === "workout" && purchase.workoutPlan) {
+            const items = await WorkoutPlanItem.find({
+              workoutPlan: purchase.workoutPlan._id,
+            })
+              .populate("exercise")
+              .sort({ dayNumber: 1, exerciseOrder: 1, createdAt: 1 });
+
             return {
               purchaseId: purchase._id,
               purchaseDate: purchase.createdAt,
               status: purchase.status,
-              plan: serializeWorkoutPlan(purchase.workoutPlan),
+              plan: serializeWorkoutPlan(purchase.workoutPlan, items),
             };
           }
 
           if (purchase.planType === "nutrition" && purchase.nutritionPlan) {
+            const items = await NutritionPlanItem.find({
+              nutritionPlan: purchase.nutritionPlan._id,
+            })
+              .populate("food")
+              .sort({ dayNumber: 1, mealType: 1, itemOrder: 1, createdAt: 1 });
+
             return {
               purchaseId: purchase._id,
               purchaseDate: purchase.createdAt,
               status: purchase.status,
-              plan: serializeNutritionPlan(purchase.nutritionPlan),
+              plan: serializeNutritionPlan(purchase.nutritionPlan, items),
             };
           }
 
           return null;
         })
-        .filter(Boolean)
     );
+
+    res.status(200).json(serializedPurchases.filter(Boolean));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

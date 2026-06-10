@@ -138,11 +138,49 @@ export function createWorkoutPlan(data: Record<string, unknown>) {
   }).then((plan) => normalizePlan(plan, "workout"));
 }
 
+export function addWorkoutPlanItem(
+  planId: string,
+  data: {
+    exerciseId: string;
+    dayNumber: number;
+    exerciseOrder: number;
+    sets: number;
+    reps: number;
+    comment?: string | null;
+  }
+) {
+  assertValidPlanRequest("workout", planId, "addWorkoutPlanItem");
+
+  return apiRequest(`/workout-plans/${planId}/items`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+}
+
 export function createNutritionPlan(data: Record<string, unknown>) {
   return apiRequest<any>("/nutrition-plans", {
     method: "POST",
     body: JSON.stringify(data),
   }).then((plan) => normalizePlan(plan, "nutrition"));
+}
+
+export function addNutritionPlanItem(
+  planId: string,
+  data: {
+    foodId: string;
+    dayNumber: number;
+    mealType: string;
+    grams: number;
+    itemOrder: number;
+    comment?: string | null;
+  }
+) {
+  assertValidPlanRequest("nutrition", planId, "addNutritionPlanItem");
+
+  return apiRequest(`/nutrition-plans/${planId}/items`, {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
 }
 
 export function updateWorkoutPlan(id: string, data: Record<string, unknown>) {
