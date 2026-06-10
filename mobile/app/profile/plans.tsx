@@ -9,7 +9,11 @@ import AppButton from "@/components/ui/AppButton";
 import PurchasedPlanCard from "@/components/profile/PurchasedPlanCard";
 
 import { COLORS } from "@/constants/colors";
-import { getMyPurchasedPlans, PurchasedPlan } from "@/services/planService";
+import {
+  getMyPurchasedPlans,
+  getPlanRouteId,
+  PurchasedPlan,
+} from "@/services/planService";
 
 const getTrainerName = (purchase: PurchasedPlan) => {
   const username = purchase.plan.trainerProfile?.user?.username;
@@ -106,15 +110,23 @@ export default function MyPlansScreen() {
                 "ru-RU"
               )}
               status={purchase.status === "active" ? "Активен" : purchase.status}
-              onPress={() =>
-                router.push({
-                  pathname: "/profile/plans/[id]",
-                  params: {
-                    id: `${purchase.plan.type}-${purchase.plan.id}`,
-                    purchaseId: purchase.purchaseId,
-                  },
-                })
-              }
+              onPress={() => {
+                const routeId = getPlanRouteId(purchase.plan);
+                console.log("Переход к купленному плану", {
+                  purchase,
+                  routeId,
+                });
+
+                if (routeId) {
+                  router.push({
+                    pathname: "/profile/plans/[id]",
+                    params: {
+                      id: routeId,
+                      purchaseId: purchase.purchaseId,
+                    },
+                  });
+                }
+              }}
             />
           ))
         )}

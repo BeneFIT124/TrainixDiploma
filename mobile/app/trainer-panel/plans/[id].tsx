@@ -26,6 +26,10 @@ import {
   updateWorkoutPlan,
 } from "@/services/planService";
 
+const isPlanType = (type: string): type is PlanType => {
+  return type === "workout" || type === "nutrition";
+};
+
 export default function TrainerPlanDetailsScreen() {
   const { id } = useLocalSearchParams();
   const [plan, setPlan] = useState<PublicPlan | null>(null);
@@ -37,12 +41,27 @@ export default function TrainerPlanDetailsScreen() {
     const rawId = Array.isArray(id) ? id[0] : id || "";
     const [type, ...idParts] = rawId.split("-");
     return {
-      type: type as PlanType,
+      type,
       planId: idParts.join("-"),
+      rawId,
     };
   }, [id]);
 
   const loadPlan = useCallback(async () => {
+    if (
+      !isPlanType(parsed.type) ||
+      !parsed.planId ||
+      parsed.planId === "undefined"
+    ) {
+      console.warn("Не удалось открыть план тренера: отсутствует идентификатор", {
+        routeParam: parsed.rawId,
+        parsed,
+      });
+      setError("Не удалось открыть план: отсутствует идентификатор плана");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -55,7 +74,7 @@ export default function TrainerPlanDetailsScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [parsed.planId, parsed.type]);
+  }, [parsed]);
 
   useEffect(() => {
     loadPlan();
@@ -188,8 +207,12 @@ export default function TrainerPlanDetailsScreen() {
                 </View>
 
                 <View style={styles.statItem}>
-                  <Text style={styles.statValue}>{plan.items?.length || 0}</Text>
-                  <Text style={styles.statLabel}>элементов</Text>
+                  <Text style={styles.statValue}>
+                    {isNutritionPlan ? plan.items?.length || 0 : plan.days?.length || 0}
+                  </Text>
+                  <Text style={styles.statLabel}>
+                    {isNutritionPlan ? "элементов" : "дней"}
+                  </Text>
                 </View>
               </View>
             </GlassCard>
@@ -199,6 +222,41 @@ export default function TrainerPlanDetailsScreen() {
               <Text style={styles.description}>
                 {plan.description || "Описание пока не добавлено."}
               </Text>
+            </GlassCard>
+
+            <GlassCard style={styles.card}>
+              <Text style={styles.sectionTitle}>Состав плана</Text>
+              {isNutritionPlan ? (
+                (plan.items || []).length === 0 ? (
+                  <Text style={styles.description}>
+                    В этом плане питания пока нет элементов
+                  </Text>
+                ) : (
+                  (plan.items || []).map((item) => (
+                    <View key={item._id || item.id} style={styles.planItem}>
+                      <Text style={styles.planItemTitle}>
+                        {item.food?.name || "Продукт"}
+                      </Text>
+                      <Text style={styles.planItemMeta}>
+                        {item.grams || 0} г • {item.calories || 0} ккал
+                      </Text>
+                    </View>
+                  ))
+                )
+              ) : (plan.days || []).length === 0 ? (
+                <Text style={styles.description}>
+                  В этом тренировочном плане пока нет дней
+                </Text>
+              ) : (
+                (plan.days || []).map((day) => (
+                  <View key={day.id || day._id} style={styles.planItem}>
+                    <Text style={styles.planItemTitle}>{day.title}</Text>
+                    <Text style={styles.planItemMeta}>
+                      {(day.exercises || []).length} упражнений
+                    </Text>
+                  </View>
+                ))
+              )}
             </GlassCard>
 
             <View style={styles.actions}>
@@ -342,6 +400,25 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 15,
     lineHeight: 22,
+  },
+  planItem: {
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 12,
+    marginBottom: 10,
+  },
+  planItemTitle: {
+    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  planItemMeta: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
   },
   actions: {
     gap: 12,

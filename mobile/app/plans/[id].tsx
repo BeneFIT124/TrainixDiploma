@@ -18,6 +18,10 @@ import AppButton from "@/components/ui/AppButton";
 import { COLORS } from "@/constants/colors";
 import { getPlanById, PlanType, PublicPlan, purchasePlan } from "@/services/planService";
 
+const isPlanType = (type: string): type is PlanType => {
+  return type === "workout" || type === "nutrition";
+};
+
 const getTrainerName = (plan: PublicPlan) => {
   const username = plan.trainerProfile?.user?.username;
   return typeof username === "string" && username.trim() ? username : "Тренер";
@@ -44,15 +48,26 @@ export default function PlanDetailsScreen() {
   const parsed = useMemo(() => {
     const rawId = Array.isArray(id) ? id[0] : id || "";
     const [type, ...idParts] = rawId.split("-");
+    const planId = idParts.join("-");
+
     return {
-      type: type as PlanType,
-      planId: idParts.join("-"),
+      type,
+      planId,
+      rawId,
     };
   }, [id]);
 
   const loadPlan = useCallback(async () => {
-    if (!parsed.type || !parsed.planId) {
-      setError("Некорректный идентификатор плана");
+    if (
+      !isPlanType(parsed.type) ||
+      !parsed.planId ||
+      parsed.planId === "undefined"
+    ) {
+      console.warn("Не удалось открыть план: отсутствует идентификатор плана", {
+        routeParam: parsed.rawId,
+        parsed,
+      });
+      setError("Не удалось открыть план: отсутствует идентификатор плана");
       setIsLoading(false);
       return;
     }
@@ -69,7 +84,7 @@ export default function PlanDetailsScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [parsed.planId, parsed.type]);
+  }, [parsed]);
 
   useEffect(() => {
     loadPlan();
@@ -188,12 +203,60 @@ export default function PlanDetailsScreen() {
               <Text style={styles.sectionTitle}>Что входит</Text>
               <Text style={styles.description}>
                 {isNutritionPlan
-                  ? "План питания, целевые калории и список продуктов по приемам пищи."
-                  : "Тренировочный план, упражнения и параметры подходов."}
+                ? "План питания, целевые калории и список продуктов по приемам пищи."
+                : "Тренировочный план, упражнения и параметры подходов."}
               </Text>
-              <Text style={styles.description}>
-                Элементов в плане: {plan.items?.length || 0}
-              </Text>
+
+              {isNutritionPlan ? (
+                <>
+                  <View style={styles.nutritionTargets}>
+                    <Text style={styles.targetText}>
+                      Калории: {plan.dailyCalories || 0} ккал
+                    </Text>
+                    <Text style={styles.targetText}>
+                      Б: {plan.dailyProtein || 0} г • Ж: {plan.dailyFat || 0} г • У:{" "}
+                      {plan.dailyCarbs || 0} г
+                    </Text>
+                  </View>
+
+                  {(plan.items || []).length === 0 ? (
+                    <Text style={styles.description}>
+                      В этом плане питания пока нет элементов
+                    </Text>
+                  ) : (
+                    (plan.items || []).map((item) => (
+                      <View key={item._id || item.id} style={styles.planItem}>
+                        <Text style={styles.planItemTitle}>
+                          {item.food?.name || "Продукт"}
+                        </Text>
+                        <Text style={styles.planItemMeta}>
+                          {item.grams || 0} г • {item.calories || 0} ккал
+                        </Text>
+                      </View>
+                    ))
+                  )}
+                </>
+              ) : (plan.days || []).length === 0 ? (
+                <Text style={styles.description}>
+                  В этом тренировочном плане пока нет дней
+                </Text>
+              ) : (
+                (plan.days || []).map((day) => (
+                  <View key={day.id || day._id} style={styles.planDay}>
+                    <Text style={styles.planDayTitle}>{day.title}</Text>
+                    {(day.exercises || []).map((exerciseItem: any, index: number) => (
+                      <Text
+                        key={`${day.id || day._id}-${exerciseItem.exercise?._id || index}`}
+                        style={styles.planExerciseText}
+                      >
+                        {index + 1}. {exerciseItem.exercise?.name || "Упражнение"} —{" "}
+                        {exerciseItem.setsCount || exerciseItem.sets || 1}x
+                        {exerciseItem.reps || 10}
+                      </Text>
+                    ))}
+                  </View>
+                ))
+              )}
             </GlassCard>
 
             <AppButton
@@ -304,6 +367,53 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 8,
+  },
+  nutritionTargets: {
+    gap: 5,
+    marginBottom: 12,
+  },
+  targetText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    fontWeight: "700",
+  },
+  planItem: {
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 12,
+    marginBottom: 10,
+  },
+  planItemTitle: {
+    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  planItemMeta: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
+  },
+  planDay: {
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 12,
+    marginBottom: 10,
+  },
+  planDayTitle: {
+    color: COLORS.text,
+    fontSize: 16,
+    fontWeight: "900",
+    marginBottom: 8,
+  },
+  planExerciseText: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    lineHeight: 19,
   },
   stateCard: {
     alignItems: "center",

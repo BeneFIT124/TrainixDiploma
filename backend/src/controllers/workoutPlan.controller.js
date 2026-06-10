@@ -1,7 +1,19 @@
+import mongoose from "mongoose";
 import WorkoutPlan from "../models/WorkoutPlan.js";
 import WorkoutPlanItem from "../models/WorkoutPlanItem.js";
 import TrainerProfile from "../models/TrainerProfile.js";
 import Exercise from "../models/Exercise.js";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const validateObjectId = (id, res, message = "Некорректный идентификатор плана") => {
+  if (!id || id === "undefined" || !isValidObjectId(id)) {
+    res.status(400).json({ message });
+    return false;
+  }
+
+  return true;
+};
 
 export const createWorkoutPlan = async (req, res) => {
   try {
@@ -66,6 +78,10 @@ export const getMyWorkoutPlans = async (req, res) => {
 
 export const getWorkoutPlanById = async (req, res) => {
   try {
+    if (!validateObjectId(req.params.id, res)) {
+      return;
+    }
+
     const trainerProfile = await TrainerProfile.findOne({ user: req.user._id });
 
     if (!trainerProfile) {
@@ -91,6 +107,10 @@ export const getWorkoutPlanById = async (req, res) => {
 
 export const updateWorkoutPlan = async (req, res) => {
   try {
+    if (!validateObjectId(req.params.id, res)) {
+      return;
+    }
+
     const trainerProfile = await TrainerProfile.findOne({ user: req.user._id });
 
     if (!trainerProfile) {
@@ -137,6 +157,10 @@ export const updateWorkoutPlan = async (req, res) => {
 
 export const deleteWorkoutPlan = async (req, res) => {
   try {
+    if (!validateObjectId(req.params.id, res)) {
+      return;
+    }
+
     const trainerProfile = await TrainerProfile.findOne({ user: req.user._id });
 
     if (!trainerProfile) {
@@ -168,6 +192,14 @@ export const addWorkoutPlanItem = async (req, res) => {
     const { planId } = req.params;
     const { exerciseId, dayNumber, exerciseOrder, sets, reps, comment } =
       req.body;
+
+    if (!validateObjectId(planId, res)) {
+      return;
+    }
+
+    if (!validateObjectId(exerciseId, res, "Некорректный идентификатор упражнения")) {
+      return;
+    }
 
     const trainerProfile = await TrainerProfile.findOne({ user: req.user._id });
 
@@ -218,6 +250,10 @@ export const getWorkoutPlanItems = async (req, res) => {
   try {
     const { planId } = req.params;
 
+    if (!validateObjectId(planId, res)) {
+      return;
+    }
+
     const trainerProfile = await TrainerProfile.findOne({ user: req.user._id });
 
     if (!trainerProfile) {
@@ -250,6 +286,14 @@ export const getWorkoutPlanItems = async (req, res) => {
 export const deleteWorkoutPlanItem = async (req, res) => {
   try {
     const { planId, itemId } = req.params;
+
+    if (!validateObjectId(planId, res)) {
+      return;
+    }
+
+    if (!validateObjectId(itemId, res, "Некорректный идентификатор элемента плана")) {
+      return;
+    }
 
     const trainerProfile = await TrainerProfile.findOne({ user: req.user._id });
 

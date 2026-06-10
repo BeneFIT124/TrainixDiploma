@@ -19,6 +19,10 @@ import { COLORS } from "@/constants/colors";
 import { useActivePlanStore } from "@/store/activePlanStore";
 import { getPlanById, PlanType, PublicPlan } from "@/services/planService";
 
+const isPlanType = (type: string): type is PlanType => {
+  return type === "workout" || type === "nutrition";
+};
+
 const mealTypeLabel: Record<string, string> = {
   breakfast: "Завтрак",
   lunch: "Обед",
@@ -99,6 +103,30 @@ const buildWorkoutPlanDays = (plan: PublicPlan) => {
 };
 
 const buildNutritionPlanDays = (plan: PublicPlan) => {
+  if (Array.isArray(plan.days) && plan.days.length > 0) {
+    return plan.days.map((day, dayIndex) => ({
+      id: String(day.id || day._id || `${plan.id}-nutrition-day-${dayIndex + 1}`),
+      title: day.title || `День ${day.dayNumber || dayIndex + 1}`,
+      meals: (day.meals || []).map((meal: any, mealIndex: number) => ({
+        id: String(meal.id || meal._id || `${plan.id}-meal-${mealIndex + 1}`),
+        mealType: mealTypeLabel[meal.mealType] || meal.mealType || "Прием пищи",
+        foods: (meal.foods || []).map((foodItem: any) => {
+          const food = foodItem.food || foodItem;
+
+          return {
+            id: String(food?._id || food?.id || foodItem.foodId || foodItem.id),
+            name: food?.name || foodItem.name || "Продукт",
+            grams: foodItem.grams || 0,
+            calories: foodItem.calories || 0,
+            protein: foodItem.protein || 0,
+            fat: foodItem.fat || 0,
+            carbs: foodItem.carbs || 0,
+          };
+        }),
+      })),
+    }));
+  }
+
   const meals = new Map<string, any[]>();
 
   (plan.items || []).forEach((item) => {
@@ -141,8 +169,9 @@ export default function PurchasedPlanDetailsScreen() {
     const rawId = Array.isArray(id) ? id[0] : id || "";
     const [type, ...idParts] = rawId.split("-");
     return {
-      type: type as PlanType,
+      type,
       planId: idParts.join("-"),
+      rawId,
     };
   }, [id]);
 
@@ -156,6 +185,20 @@ export default function PurchasedPlanDetailsScreen() {
   } = useActivePlanStore();
 
   const loadPlan = useCallback(async () => {
+    if (
+      !isPlanType(parsed.type) ||
+      !parsed.planId ||
+      parsed.planId === "undefined"
+    ) {
+      console.warn("Не удалось открыть купленный план: отсутствует идентификатор", {
+        routeParam: parsed.rawId,
+        parsed,
+      });
+      setError("Не удалось открыть план: отсутствует идентификатор плана");
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -168,7 +211,7 @@ export default function PurchasedPlanDetailsScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [parsed.planId, parsed.type]);
+  }, [parsed]);
 
   useEffect(() => {
     loadPlan();
@@ -188,16 +231,21 @@ export default function PurchasedPlanDetailsScreen() {
     if (plan.type === "nutrition") {
       if (active) {
         deactivateNutritionPlan();
+        console.log("План питания деактивирован", { planType: plan.type, planId: plan.id, plan });
         Alert.alert("План питания деактивирован");
         return;
       }
 
-      activateNutritionPlan({
+      const nextPlan = {
         id: plan.id,
         title: plan.title,
-        type: "План питания",
+        type: "План питания" as const,
         trainerName: getTrainerName(plan),
         days: buildNutritionPlanDays(plan),
+      };
+      console.log("План питания активирован", { planType: plan.type, planId: plan.id, plan: nextPlan });
+      activateNutritionPlan({
+        ...nextPlan,
       });
       Alert.alert("План питания активирован");
       return;
@@ -205,17 +253,20 @@ export default function PurchasedPlanDetailsScreen() {
 
     if (active) {
       deactivateWorkoutPlan();
+      console.log("Тренировочный план деактивирован", { planType: plan.type, planId: plan.id, plan });
       Alert.alert("Тренировочный план деактивирован");
       return;
     }
 
-    activateWorkoutPlan({
+    const nextPlan = {
       id: plan.id,
       title: plan.title,
-      type: "Тренировочный план",
+      type: "Тренировочный план" as const,
       trainerName: getTrainerName(plan),
       days: buildWorkoutPlanDays(plan),
-    });
+    };
+    console.log("Тренировочный план активирован", { planType: plan.type, planId: plan.id, plan: nextPlan });
+    activateWorkoutPlan(nextPlan);
     Alert.alert("Тренировочный план активирован");
   };
 
@@ -274,9 +325,38 @@ export default function PurchasedPlanDetailsScreen() {
                 Купленный план используется как ориентир. После активации он
                 появится в соответствующем разделе приложения.
               </Text>
-              <Text style={styles.description}>
-                Элементов в плане: {plan.items?.length || 0}
-              </Text>
+              {isNutritionPlan ? (
+                (plan.items || []).length === 0 ? (
+                  <Text style={styles.description}>
+                    В этом плане питания пока нет элементов
+                  </Text>
+                ) : (
+                  (plan.items || []).map((item) => (
+                    <View key={item._id || item.id} style={styles.planItem}>
+                      <Text style={styles.planItemTitle}>
+                        {item.food?.name || "Продукт"}
+                      </Text>
+                      <Text style={styles.planItemMeta}>
+                        {mealTypeLabel[item.mealType] || item.mealType || "Прием пищи"} •{" "}
+                        {item.grams || 0} г • {item.calories || 0} ккал
+                      </Text>
+                    </View>
+                  ))
+                )
+              ) : buildWorkoutPlanDays(plan).length === 0 ? (
+                <Text style={styles.description}>
+                  В этом тренировочном плане пока нет дней
+                </Text>
+              ) : (
+                buildWorkoutPlanDays(plan).map((day) => (
+                  <View key={day.id} style={styles.planItem}>
+                    <Text style={styles.planItemTitle}>{day.title}</Text>
+                    <Text style={styles.planItemMeta}>
+                      {day.exercises.length} упражнений
+                    </Text>
+                  </View>
+                ))
+              )}
             </GlassCard>
 
             <AppButton
@@ -380,6 +460,25 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
     marginBottom: 8,
+  },
+  planItem: {
+    borderRadius: 16,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: COLORS.border,
+    padding: 12,
+    marginTop: 8,
+  },
+  planItemTitle: {
+    color: COLORS.text,
+    fontSize: 15,
+    fontWeight: "900",
+    marginBottom: 4,
+  },
+  planItemMeta: {
+    color: COLORS.textSecondary,
+    fontSize: 13,
+    fontWeight: "700",
   },
   activateButton: {
     marginTop: 8,

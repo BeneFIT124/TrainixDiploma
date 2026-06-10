@@ -18,6 +18,7 @@ import PlanCard from "@/components/trainers/PlanCard";
 import { COLORS } from "@/constants/colors";
 import {
   getPlans,
+  getPlanRouteId,
   getTrainerPlans as getTrainerPublicPlans,
   PublicPlan,
 } from "@/services/planService";
@@ -269,7 +270,7 @@ export default function TrainerDetailsScreen() {
             ) : (
               plans.map((plan) => (
                 <PlanCard
-                  key={`${plan.type}-${plan.id}`}
+                  key={`${plan.type}-${plan.id || plan._id}`}
                   title={plan.title}
                   type={planTypeLabel[plan.type]}
                   difficulty={
@@ -282,7 +283,17 @@ export default function TrainerDetailsScreen() {
                   }
                   price={plan.price}
                   trainerName={trainerName}
-                  onPress={() => router.push(`/plans/${plan.type}-${plan.id}`)}
+                  onPress={() => {
+                    const routeId = getPlanRouteId(plan);
+                    console.log("Переход к деталям плана из профиля тренера", {
+                      plan,
+                      routeId,
+                    });
+
+                    if (routeId) {
+                      router.push(`/plans/${routeId}`);
+                    }
+                  }}
                 />
               ))
             )}

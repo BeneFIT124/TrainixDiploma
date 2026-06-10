@@ -124,40 +124,52 @@ export default function NutritionScreen() {
 
             <Text style={styles.planDaysTitle}>Выбери день и прием пищи</Text>
 
-            {activeNutritionPlan.days.map((day) => (
-              <View key={day.id} style={styles.planDayBlock}>
-                <View style={styles.planDayHeader}>
-                  <Text style={styles.planDayTitle}>{day.title}</Text>
-                  <Text style={styles.planDayMeta}>
-                    {day.meals.length} приемов пищи
-                  </Text>
+            {activeNutritionPlan.days.length === 0 ? (
+              <Text style={styles.planEmptyText}>
+                В активном плане питания пока нет элементов
+              </Text>
+            ) : (
+              activeNutritionPlan.days.map((day) => (
+                <View key={day.id} style={styles.planDayBlock}>
+                  <View style={styles.planDayHeader}>
+                    <Text style={styles.planDayTitle}>{day.title}</Text>
+                    <Text style={styles.planDayMeta}>
+                      {day.meals.length} приемов пищи
+                    </Text>
+                  </View>
+
+                  {day.meals.length === 0 ? (
+                    <Text style={styles.planEmptyText}>
+                      В этом дне пока нет приемов пищи
+                    </Text>
+                  ) : (
+                    day.meals.map((meal) => (
+                      <Pressable
+                        key={meal.id}
+                        onPress={() => handleStartPlanMeal(meal)}
+                        style={({ pressed }) => [
+                          styles.planMealButton,
+                          pressed && styles.pressed,
+                        ]}
+                      >
+                        <View style={styles.planMealInfo}>
+                          <Text style={styles.planMealTitle}>{meal.mealType}</Text>
+                          <Text style={styles.planMealMeta}>
+                            {meal.foods.length} продуктов
+                          </Text>
+                        </View>
+
+                        <Ionicons
+                          name="chevron-forward"
+                          size={20}
+                          color={COLORS.textMuted}
+                        />
+                      </Pressable>
+                    ))
+                  )}
                 </View>
-
-                {day.meals.map((meal) => (
-                  <Pressable
-                    key={meal.id}
-                    onPress={() => handleStartPlanMeal(meal)}
-                    style={({ pressed }) => [
-                      styles.planMealButton,
-                      pressed && styles.pressed,
-                    ]}
-                  >
-                    <View style={styles.planMealInfo}>
-                      <Text style={styles.planMealTitle}>{meal.mealType}</Text>
-                      <Text style={styles.planMealMeta}>
-                        {meal.foods.length} продуктов
-                      </Text>
-                    </View>
-
-                    <Ionicons
-                      name="chevron-forward"
-                      size={20}
-                      color={COLORS.textMuted}
-                    />
-                  </Pressable>
-                ))}
-              </View>
-            ))}
+              ))
+            )}
           </GlassCard>
         )}
 
@@ -353,6 +365,11 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 12,
     fontWeight: "700",
+  },
+  planEmptyText: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
   },
   sectionTitle: {
     color: COLORS.text,

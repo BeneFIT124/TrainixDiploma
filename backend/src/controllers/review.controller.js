@@ -1,6 +1,9 @@
+import mongoose from "mongoose";
 import PlanPurchase from "../models/PlanPurchase.js";
 import Review from "../models/Review.js";
 import TrainerProfile from "../models/TrainerProfile.js";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const updateTrainerRating = async (trainerProfileId) => {
   const stats = await Review.aggregate([
@@ -29,6 +32,10 @@ export const createReview = async (req, res) => {
 
     if (!purchaseId || !trainerProfileId) {
       return res.status(400).json({ message: "Укажи купленный план и тренера" });
+    }
+
+    if (!isValidObjectId(purchaseId) || !isValidObjectId(trainerProfileId)) {
+      return res.status(400).json({ message: "Некорректный идентификатор плана" });
     }
 
     const normalizedRating = Number(rating);
@@ -97,6 +104,10 @@ export const createReview = async (req, res) => {
 
 export const getTrainerReviews = async (req, res) => {
   try {
+    if (!isValidObjectId(req.params.trainerProfileId)) {
+      return res.status(400).json({ message: "Некорректный идентификатор тренера" });
+    }
+
     const reviews = await Review.find({
       trainerProfile: req.params.trainerProfileId,
     })

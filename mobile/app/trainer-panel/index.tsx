@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import {
   getMyNutritionPlans,
   getMyWorkoutPlans,
+  getPlanRouteId,
   PublicPlan,
 } from "@/services/planService";
 
@@ -169,12 +170,22 @@ export default function TrainerPanelScreen() {
             ) : (
               plans.map((plan) => (
                 <TrainerOwnPlanCard
-                  key={`${plan.type}-${plan.id}`}
+                  key={`${plan.type}-${plan.id || plan._id}`}
                   title={plan.title}
                   type={planTypeLabel[plan.type]}
                   price={plan.price}
                   status={plan.isActive ? "Опубликован" : "Черновик"}
-                  onPress={() => router.push(`/trainer-panel/plans/${plan.type}-${plan.id}`)}
+                  onPress={() => {
+                    const routeId = getPlanRouteId(plan);
+                    console.log("Переход к плану из панели тренера", {
+                      plan,
+                      routeId,
+                    });
+
+                    if (routeId) {
+                      router.push(`/trainer-panel/plans/${routeId}`);
+                    }
+                  }}
                 />
               ))
             )}

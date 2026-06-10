@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import NutritionPlan from "../models/NutritionPlan.js";
 import NutritionPlanItem from "../models/NutritionPlanItem.js";
 import PlanPurchase from "../models/PlanPurchase.js";
@@ -7,6 +8,22 @@ import WorkoutPlanItem from "../models/WorkoutPlanItem.js";
 const trainerProfilePopulate = {
   path: "trainerProfile",
   populate: { path: "user", select: "username email avatarUrl role" },
+};
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const validatePlanRequest = (type, id, res) => {
+  if (!["workout", "nutrition"].includes(type)) {
+    res.status(400).json({ message: "Некорректный тип плана" });
+    return false;
+  }
+
+  if (!id || id === "undefined" || !isValidObjectId(id)) {
+    res.status(400).json({ message: "Некорректный идентификатор плана" });
+    return false;
+  }
+
+  return true;
 };
 
 const buildWorkoutPlanDays = (plan, items = []) => {
@@ -34,6 +51,40 @@ const buildWorkoutPlanDays = (plan, items = []) => {
           comment: item.comment,
         })),
     }));
+};
+
+const buildNutritionPlanDays = (plan, items = []) => {
+  const meals = items.reduce((groups, item) => {
+    const mealType = item.mealType || "snack";
+    const mealItems = groups.get(mealType) || [];
+    mealItems.push(item);
+    groups.set(mealType, mealItems);
+    return groups;
+  }, new Map());
+
+  return [
+    {
+      id: `${plan._id}-day-1`,
+      dayNumber: 1,
+      title: "Рацион",
+      meals: Array.from(meals.entries()).map(([mealType, mealItems]) => ({
+        id: `${plan._id}-${mealType}`,
+        mealType,
+        foods: mealItems
+          .sort((first, second) => (first.itemOrder || 1) - (second.itemOrder || 1))
+          .map((item) => ({
+            food: item.food,
+            grams: item.grams,
+            calories: item.calories,
+            protein: item.protein,
+            fat: item.fat,
+            carbs: item.carbs,
+            itemOrder: item.itemOrder,
+            comment: item.comment,
+          })),
+      })),
+    },
+  ];
 };
 
 const serializeWorkoutPlan = (plan, items = []) => ({
@@ -68,6 +119,8 @@ const serializeNutritionPlan = (plan, items = []) => ({
   isActive: plan.isActive,
   trainerProfile: plan.trainerProfile,
   items,
+  nutritionPlanItems: items,
+  days: buildNutritionPlanDays(plan, items),
   createdAt: plan.createdAt,
 });
 
@@ -94,6 +147,10 @@ export const getPlans = async (req, res) => {
 export const getPlanById = async (req, res) => {
   try {
     const { type, id } = req.params;
+
+    if (!validatePlanRequest(type, id, res)) {
+      return;
+    }
 
     if (type === "workout") {
       const plan = await WorkoutPlan.findById(id).populate(trainerProfilePopulate);
@@ -122,8 +179,6 @@ export const getPlanById = async (req, res) => {
 
       return res.status(200).json(serializeNutritionPlan(plan, items));
     }
-
-    res.status(400).json({ message: "Некорректный тип плана" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -132,6 +187,16 @@ export const getPlanById = async (req, res) => {
 export const getTrainerPlans = async (req, res) => {
   try {
     const { trainerProfileId } = req.params;
+
+    if (
+      !trainerProfileId ||
+      trainerProfileId === "undefined" ||
+      !isValidObjectId(trainerProfileId)
+    ) {
+      return res.status(400).json({
+        message: "Некорректный идентификатор тренера",
+      });
+    }
 
     const [workoutPlans, nutritionPlans] = await Promise.all([
       WorkoutPlan.find({ trainerProfile: trainerProfileId, isActive: true })
@@ -159,6 +224,10 @@ export const getTrainerPlans = async (req, res) => {
 export const purchasePlan = async (req, res) => {
   try {
     const { type, id } = req.params;
+
+    if (!validatePlanRequest(type, id, res)) {
+      return;
+    }
 
     const plan =
       type === "workout"
