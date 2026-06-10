@@ -276,6 +276,72 @@ export default function PurchasedPlanDetailsScreen() {
     ? String(plan.trainerProfile?._id || plan.trainerProfile?.id || "")
     : "";
 
+  const renderPurchasedNutritionPlan = () => {
+    if (!plan) return null;
+
+    const days = buildNutritionPlanDays(plan);
+    const hasData = days.some((day) => day.meals.length > 0);
+
+    if (!hasData) {
+      return <Text style={styles.description}>В этом плане пока нет данных.</Text>;
+    }
+
+    return days.map((day) => (
+      <View key={day.id} style={styles.planItem}>
+        <Text style={styles.planItemTitle}>{day.title}</Text>
+        {day.meals.map((meal: any) => (
+          <View key={meal.id} style={styles.planMealBlock}>
+            <Text style={styles.planMealTitle}>{meal.mealType}</Text>
+            {meal.foods.length === 0 ? (
+              <Text style={styles.planItemMeta}>Продуктов пока нет</Text>
+            ) : (
+              meal.foods.map((food: any) => (
+                <Text key={food.id} style={styles.planItemMeta}>
+                  {food.name} - {food.grams} г, {Math.round(food.calories)} ккал,
+                  Б {Math.round(food.protein)} г, Ж {Math.round(food.fat)} г,
+                  У {Math.round(food.carbs)} г
+                </Text>
+              ))
+            )}
+          </View>
+        ))}
+      </View>
+    ));
+  };
+
+  const renderPurchasedWorkoutPlan = () => {
+    if (!plan) return null;
+
+    const days = buildWorkoutPlanDays(plan);
+    const hasData = days.some((day) => day.exercises.length > 0);
+
+    if (!hasData) {
+      return <Text style={styles.description}>В этом плане пока нет данных.</Text>;
+    }
+
+    return days.map((day) => (
+      <View key={day.id} style={styles.planItem}>
+        <Text style={styles.planItemTitle}>{day.title}</Text>
+        {day.exercises.map((exercise: any, exerciseIndex: number) => (
+          <View key={exercise.id} style={styles.planMealBlock}>
+            <Text style={styles.planMealTitle}>
+              {exerciseIndex + 1}. {exercise.name}
+            </Text>
+            <Text style={styles.planItemMeta}>
+              {exercise.muscleGroup} • {exercise.equipment}
+            </Text>
+            {exercise.sets.map((set: any) => (
+              <Text key={`${exercise.id}-${set.order}`} style={styles.planItemMeta}>
+                Подход {set.order}: {set.reps} повт.
+                {set.weight ? `, ${set.weight} кг` : ""}
+              </Text>
+            ))}
+          </View>
+        ))}
+      </View>
+    ));
+  };
+
   return (
     <ScreenContainer>
       <ScrollView
@@ -325,38 +391,9 @@ export default function PurchasedPlanDetailsScreen() {
                 Купленный план используется как ориентир. После активации он
                 появится в соответствующем разделе приложения.
               </Text>
-              {isNutritionPlan ? (
-                (plan.items || []).length === 0 ? (
-                  <Text style={styles.description}>
-                    В этом плане питания пока нет элементов
-                  </Text>
-                ) : (
-                  (plan.items || []).map((item) => (
-                    <View key={item._id || item.id} style={styles.planItem}>
-                      <Text style={styles.planItemTitle}>
-                        {item.food?.name || "Продукт"}
-                      </Text>
-                      <Text style={styles.planItemMeta}>
-                        {mealTypeLabel[item.mealType] || item.mealType || "Прием пищи"} •{" "}
-                        {item.grams || 0} г • {item.calories || 0} ккал
-                      </Text>
-                    </View>
-                  ))
-                )
-              ) : buildWorkoutPlanDays(plan).length === 0 ? (
-                <Text style={styles.description}>
-                  В этом тренировочном плане пока нет дней
-                </Text>
-              ) : (
-                buildWorkoutPlanDays(plan).map((day) => (
-                  <View key={day.id} style={styles.planItem}>
-                    <Text style={styles.planItemTitle}>{day.title}</Text>
-                    <Text style={styles.planItemMeta}>
-                      {day.exercises.length} упражнений
-                    </Text>
-                  </View>
-                ))
-              )}
+              {isNutritionPlan
+                ? renderPurchasedNutritionPlan()
+                : renderPurchasedWorkoutPlan()}
             </GlassCard>
 
             <AppButton
@@ -479,6 +516,15 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 13,
     fontWeight: "700",
+  },
+  planMealBlock: {
+    marginTop: 10,
+    gap: 5,
+  },
+  planMealTitle: {
+    color: COLORS.text,
+    fontSize: 14,
+    fontWeight: "900",
   },
   activateButton: {
     marginTop: 8,

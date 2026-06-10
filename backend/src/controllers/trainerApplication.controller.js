@@ -1,6 +1,9 @@
 import TrainerApplication from "../models/TrainerApplication.js";
 import TrainerProfile from "../models/TrainerProfile.js";
 import User from "../models/User.js";
+import mongoose from "mongoose";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 export const createTrainerApplication = async (req, res) => {
   try {
@@ -64,6 +67,10 @@ export const reviewTrainerApplication = async (req, res) => {
   try {
     const { id } = req.params;
     const { status, comment } = req.body;
+
+    if (!id || id === "undefined" || !isValidObjectId(id)) {
+      return res.status(400).json({ message: "Некорректный идентификатор заявки" });
+    }
 
     if (!["approved", "rejected"].includes(status)) {
       return res.status(400).json({

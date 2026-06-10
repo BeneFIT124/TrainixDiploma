@@ -17,6 +17,8 @@ export type PublicPlan = {
   dailyCarbs?: number;
   price: number;
   isActive: boolean;
+  contentLocked?: boolean;
+  isPurchased?: boolean;
   trainerProfile?: any;
   items?: any[];
   days?: any[];

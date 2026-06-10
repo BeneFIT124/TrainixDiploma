@@ -70,6 +70,7 @@ type ActivePlanStore = {
 
   isWorkoutPlanActive: (planId: string) => boolean;
   isNutritionPlanActive: (planId: string) => boolean;
+  resetActivePlans: () => void;
 };
 
 export const useActivePlanStore = create<ActivePlanStore>((set, get) => ({
@@ -106,5 +107,12 @@ export const useActivePlanStore = create<ActivePlanStore>((set, get) => ({
 
   isNutritionPlanActive: (planId) => {
     return get().activeNutritionPlan?.id === planId;
+  },
+
+  resetActivePlans: () => {
+    set({
+      activeWorkoutPlan: null,
+      activeNutritionPlan: null,
+    });
   },
 }));

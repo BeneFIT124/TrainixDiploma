@@ -38,6 +38,22 @@ const difficultyLabel: Record<string, string> = {
   advanced: "Продвинутый",
 };
 
+const mealTypeLabel: Record<string, string> = {
+  breakfast: "Завтрак",
+  lunch: "Обед",
+  dinner: "Ужин",
+  snack: "Перекус",
+};
+
+const formatCount = (count: number, one: string, few: string, many: string) => {
+  const mod10 = count % 10;
+  const mod100 = count % 100;
+
+  if (mod10 === 1 && mod100 !== 11) return one;
+  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) return few;
+  return many;
+};
+
 export default function PlanDetailsScreen() {
   const { id } = useLocalSearchParams();
   const [plan, setPlan] = useState<PublicPlan | null>(null);
@@ -132,6 +148,145 @@ export default function PlanDetailsScreen() {
   };
 
   const isNutritionPlan = plan?.type === "nutrition";
+  const contentLocked = plan?.contentLocked !== false && !plan?.isPurchased;
+
+  const renderNutritionPreview = () => {
+    const days = plan?.days || [];
+
+    if (days.length === 0) {
+      return <Text style={styles.description}>В этом плане пока нет данных.</Text>;
+    }
+
+    return (
+      <>
+        <Text style={styles.lockedNote}>
+          Полный рацион, продукты, граммовки и БЖУ будут доступны после покупки плана.
+        </Text>
+        {days.map((day: any, index: number) => {
+          const productsCount = day.productsCount || 0;
+          const mealTypes = Array.isArray(day.mealTypes)
+            ? day.mealTypes.map((type: string) => mealTypeLabel[type] || type)
+            : [];
+
+          return (
+            <View key={day.id || day._id || index} style={styles.planDay}>
+              <Text style={styles.planDayTitle}>
+                {day.title || `День ${day.dayNumber || index + 1}`}
+              </Text>
+              <Text style={styles.planItemMeta}>
+                {productsCount} {formatCount(productsCount, "продукт", "продукта", "продуктов")}
+              </Text>
+              <Text style={styles.planItemMeta}>
+                {mealTypes.length > 0 ? mealTypes.join(", ") : "Приемы пищи"}
+              </Text>
+            </View>
+          );
+        })}
+      </>
+    );
+  };
+
+  const renderWorkoutPreview = () => {
+    const days = plan?.days || [];
+
+    if (days.length === 0) {
+      return <Text style={styles.description}>В этом плане пока нет данных.</Text>;
+    }
+
+    return (
+      <>
+        <Text style={styles.lockedNote}>
+          Полная программа тренировок будет доступна после покупки плана.
+        </Text>
+        {days.map((day: any, index: number) => {
+          const exercisesCount = day.exercisesCount || day.exercises?.length || 0;
+          const muscleGroups = Array.isArray(day.muscleGroups) ? day.muscleGroups : [];
+
+          return (
+            <View key={day.id || day._id || index} style={styles.planDay}>
+              <Text style={styles.planDayTitle}>
+                {day.title || `День ${day.dayNumber || index + 1}`}
+              </Text>
+              <Text style={styles.planItemMeta}>
+                {exercisesCount}{" "}
+                {formatCount(exercisesCount, "упражнение", "упражнения", "упражнений")}
+              </Text>
+              {muscleGroups.length > 0 ? (
+                <Text style={styles.planItemMeta}>{muscleGroups.join(", ")}</Text>
+              ) : null}
+            </View>
+          );
+        })}
+      </>
+    );
+  };
+
+  const renderNutritionFull = () => {
+    const days = plan?.days || [];
+    const items = plan?.items || [];
+
+    if (days.length === 0 && items.length === 0) {
+      return <Text style={styles.description}>В этом плане пока нет данных.</Text>;
+    }
+
+    if (days.length > 0) {
+      return days.map((day: any, dayIndex: number) => (
+        <View key={day.id || day._id || dayIndex} style={styles.planDay}>
+          <Text style={styles.planDayTitle}>
+            {day.title || `День ${day.dayNumber || dayIndex + 1}`}
+          </Text>
+          {(day.meals || []).map((meal: any, mealIndex: number) => (
+            <View key={meal.id || meal._id || mealIndex} style={styles.planMealBlock}>
+              <Text style={styles.planItemTitle}>
+                {mealTypeLabel[meal.mealType] || meal.mealType || "Прием пищи"}
+              </Text>
+              {(meal.foods || []).map((foodItem: any, foodIndex: number) => (
+                <Text key={foodItem.id || foodItem._id || foodIndex} style={styles.planExerciseText}>
+                  {foodItem.food?.name || foodItem.name || "Продукт"} - {foodItem.grams || 0} г,{" "}
+                  {Math.round(foodItem.calories || 0)} ккал, Б {Math.round(foodItem.protein || 0)} г,
+                  Ж {Math.round(foodItem.fat || 0)} г, У {Math.round(foodItem.carbs || 0)} г
+                </Text>
+              ))}
+            </View>
+          ))}
+        </View>
+      ));
+    }
+
+    return items.map((item: any) => (
+      <View key={item._id || item.id} style={styles.planItem}>
+        <Text style={styles.planItemTitle}>{item.food?.name || "Продукт"}</Text>
+        <Text style={styles.planItemMeta}>
+          {mealTypeLabel[item.mealType] || item.mealType || "Прием пищи"} - {item.grams || 0} г,{" "}
+          {Math.round(item.calories || 0)} ккал, Б {Math.round(item.protein || 0)} г,
+          Ж {Math.round(item.fat || 0)} г, У {Math.round(item.carbs || 0)} г
+        </Text>
+      </View>
+    ));
+  };
+
+  const renderWorkoutFull = () => {
+    const days = plan?.days || [];
+
+    if (days.length === 0) {
+      return <Text style={styles.description}>В этом плане пока нет данных.</Text>;
+    }
+
+    return days.map((day: any) => (
+      <View key={day.id || day._id} style={styles.planDay}>
+        <Text style={styles.planDayTitle}>{day.title}</Text>
+        {(day.exercises || []).map((exerciseItem: any, index: number) => (
+          <Text
+            key={`${day.id || day._id}-${exerciseItem.exercise?._id || index}`}
+            style={styles.planExerciseText}
+          >
+            {index + 1}. {exerciseItem.exercise?.name || "Упражнение"} -{" "}
+            {exerciseItem.setsCount || exerciseItem.sets || 1}x{exerciseItem.reps || 10}
+          </Text>
+        ))}
+      </View>
+    ));
+  };
 
   return (
     <ScreenContainer>
@@ -207,63 +362,21 @@ export default function PlanDetailsScreen() {
                 : "Тренировочный план, упражнения и параметры подходов."}
               </Text>
 
-              {isNutritionPlan ? (
-                <>
-                  <View style={styles.nutritionTargets}>
-                    <Text style={styles.targetText}>
-                      Калории: {plan.dailyCalories || 0} ккал
-                    </Text>
-                    <Text style={styles.targetText}>
-                      Б: {plan.dailyProtein || 0} г • Ж: {plan.dailyFat || 0} г • У:{" "}
-                      {plan.dailyCarbs || 0} г
-                    </Text>
-                  </View>
-
-                  {(plan.items || []).length === 0 ? (
-                    <Text style={styles.description}>
-                      В этом плане питания пока нет элементов
-                    </Text>
-                  ) : (
-                    (plan.items || []).map((item) => (
-                      <View key={item._id || item.id} style={styles.planItem}>
-                        <Text style={styles.planItemTitle}>
-                          {item.food?.name || "Продукт"}
-                        </Text>
-                        <Text style={styles.planItemMeta}>
-                          {item.grams || 0} г • {item.calories || 0} ккал
-                        </Text>
-                      </View>
-                    ))
-                  )}
-                </>
-              ) : (plan.days || []).length === 0 ? (
-                <Text style={styles.description}>
-                  В этом тренировочном плане пока нет дней
-                </Text>
-              ) : (
-                (plan.days || []).map((day) => (
-                  <View key={day.id || day._id} style={styles.planDay}>
-                    <Text style={styles.planDayTitle}>{day.title}</Text>
-                    {(day.exercises || []).map((exerciseItem: any, index: number) => (
-                      <Text
-                        key={`${day.id || day._id}-${exerciseItem.exercise?._id || index}`}
-                        style={styles.planExerciseText}
-                      >
-                        {index + 1}. {exerciseItem.exercise?.name || "Упражнение"} —{" "}
-                        {exerciseItem.setsCount || exerciseItem.sets || 1}x
-                        {exerciseItem.reps || 10}
-                      </Text>
-                    ))}
-                  </View>
-                ))
-              )}
+              {contentLocked
+                ? isNutritionPlan
+                  ? renderNutritionPreview()
+                  : renderWorkoutPreview()
+                : isNutritionPlan
+                  ? renderNutritionFull()
+                  : renderWorkoutFull()}
             </GlassCard>
-
+            {contentLocked ? (
             <AppButton
               title="Купить план"
               onPress={handlePurchase}
               loading={isPurchasing}
             />
+            ) : null}
           </>
         )}
       </ScrollView>
@@ -376,6 +489,16 @@ const styles = StyleSheet.create({
     color: COLORS.textSecondary,
     fontSize: 14,
     fontWeight: "700",
+  },
+  lockedNote: {
+    color: COLORS.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+    marginBottom: 12,
+  },
+  planMealBlock: {
+    marginTop: 8,
+    gap: 4,
   },
   planItem: {
     borderRadius: 16,

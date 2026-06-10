@@ -9,7 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import ScreenContainer from "@/components/ui/ScreenContainer";
 import GlassCard from "@/components/ui/GlassCard";
@@ -20,6 +20,7 @@ import { SelectedMealFood, useMealBuilderStore } from "@/store/mealBuilderStore"
 import {
   addMealItem,
   createMeal,
+  getMealsByDate,
   mealTypeValues,
   MealType,
 } from "@/services/nutritionService";
@@ -27,10 +28,56 @@ import {
 const mealTypes = ["Завтрак", "Обед", "Ужин", "Перекус"];
 
 export default function AddMealScreen() {
-  const { selectedFoods, removeFood, updateGrams, clearMeal } =
+  const {
+    selectedMealType,
+    selectedFoods,
+    setSelectedMealType,
+    removeFood,
+    updateGrams,
+    clearMeal,
+  } =
     useMealBuilderStore();
-  const [selectedMealType, setSelectedMealType] = useState(mealTypes[0]);
+  const [usedMealTypes, setUsedMealTypes] = useState<MealType[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+
+  const today = useMemo(() => new Date().toISOString(), []);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadUsedMealTypes = async () => {
+      try {
+        const meals = await getMealsByDate(today);
+
+        if (!isMounted) {
+          return;
+        }
+
+        const nextUsedMealTypes = meals.map((meal) => meal.mealType);
+        setUsedMealTypes(nextUsedMealTypes);
+
+        const selectedValue = mealTypeValues[selectedMealType] || "breakfast";
+        if (nextUsedMealTypes.includes(selectedValue as MealType)) {
+          const firstAvailable = mealTypes.find((type) => {
+            const mealType = mealTypeValues[type] || "breakfast";
+            return !nextUsedMealTypes.includes(mealType as MealType);
+          });
+
+          if (firstAvailable) {
+            setSelectedMealType(firstAvailable);
+          }
+        }
+      } catch {
+        setUsedMealTypes([]);
+      }
+    };
+
+    loadUsedMealTypes();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [selectedMealType, setSelectedMealType, today]);
 
   const calculateFoodMacros = (food: SelectedMealFood) => {
     const multiplier = food.grams / 100;
@@ -63,6 +110,17 @@ export default function AddMealScreen() {
   );
 
   const handleSave = async () => {
+    if (isSaving) {
+      return;
+    }
+
+    const selectedMealTypeValue = (mealTypeValues[selectedMealType] || "breakfast") as MealType;
+
+    if (usedMealTypes.includes(selectedMealTypeValue)) {
+      Alert.alert("Ошибка", "Прием пищи этого типа уже добавлен за выбранный день.");
+      return;
+    }
+
     if (selectedFoods.length === 0) {
       Alert.alert("Ошибка", "Добавь хотя бы один продукт");
       return;
@@ -79,7 +137,7 @@ export default function AddMealScreen() {
       setIsSaving(true);
 
       const meal = await createMeal({
-        mealType: (mealTypeValues[selectedMealType] || "breakfast") as MealType,
+        mealType: selectedMealTypeValue,
         date: new Date().toISOString(),
       });
 
@@ -154,23 +212,28 @@ export default function AddMealScreen() {
           <View style={styles.mealTypesGrid}>
             {mealTypes.map((type) => {
               const active = selectedMealType === type;
+              const mealTypeValue = (mealTypeValues[type] || "breakfast") as MealType;
+              const disabled = usedMealTypes.includes(mealTypeValue);
 
               return (
                 <Pressable
                   key={type}
+                  disabled={disabled}
                   onPress={() => setSelectedMealType(type)}
                   style={[
                     styles.mealTypeButton,
                     active && styles.mealTypeButtonActive,
+                    disabled && styles.mealTypeButtonDisabled,
                   ]}
                 >
                   <Text
                     style={[
                       styles.mealTypeText,
                       active && styles.mealTypeTextActive,
+                      disabled && styles.mealTypeTextDisabled,
                     ]}
                   >
-                    {type}
+                    {disabled ? `${type} уже добавлен` : type}
                   </Text>
                 </Pressable>
               );
@@ -346,13 +409,20 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderColor: COLORS.primary,
   },
+  mealTypeButtonDisabled: {
+    opacity: 0.45,
+  },
   mealTypeText: {
     color: COLORS.textSecondary,
     fontSize: 14,
     fontWeight: "800",
+    textAlign: "center",
   },
   mealTypeTextActive: {
     color: "#061014",
+  },
+  mealTypeTextDisabled: {
+    color: COLORS.textMuted,
   },
   summaryCard: {
     marginBottom: 24,

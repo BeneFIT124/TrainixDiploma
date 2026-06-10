@@ -1,7 +1,7 @@
 import { router, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
-import { useCallback, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 
 import ScreenContainer from "@/components/ui/ScreenContainer";
 import AppButton from "@/components/ui/AppButton";
@@ -12,19 +12,29 @@ import { COLORS } from "@/constants/colors";
 import { useActivePlanStore } from "@/store/activePlanStore";
 import { useWorkoutBuilderStore } from "@/store/workoutBuilderStore";
 import { getWorkoutItems, getWorkouts, Workout } from "@/services/workoutService";
+import { useAuth } from "@/contexts/AuthContext";
 
 type WorkoutWithCount = Workout & {
   exercisesCount: number;
 };
 
 export default function WorkoutsScreen() {
+  const { user } = useAuth();
   const { activeWorkoutPlan } = useActivePlanStore();
   const { setWorkoutFromPlanDay } = useWorkoutBuilderStore();
   const [workouts, setWorkouts] = useState<WorkoutWithCount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadWorkouts = async () => {
+  const userId = user?._id || user?.id || null;
+
+  const loadWorkouts = useCallback(async () => {
+    if (!userId) {
+      setWorkouts([]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -49,13 +59,40 @@ export default function WorkoutsScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
   useFocusEffect(
     useCallback(() => {
       loadWorkouts();
-    }, [])
+    }, [loadWorkouts])
   );
+
+  const workoutStats = useMemo(() => {
+    const now = new Date();
+    const startOfWeek = new Date(now);
+    const day = startOfWeek.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    startOfWeek.setDate(startOfWeek.getDate() - diff);
+    startOfWeek.setHours(0, 0, 0, 0);
+
+    const workoutsThisWeek = workouts.filter((workout) => {
+      const workoutDate = new Date(workout.workoutDate);
+      return workoutDate >= startOfWeek && workoutDate <= now;
+    }).length;
+
+    const lastWorkoutDate = workouts[0]?.workoutDate
+      ? new Date(workouts[0].workoutDate).toLocaleDateString("ru-RU", {
+          day: "2-digit",
+          month: "2-digit",
+        })
+      : "—";
+
+    return {
+      total: workouts.length,
+      week: workoutsThisWeek,
+      last: lastWorkoutDate,
+    };
+  }, [workouts]);
 
   const handleStartPlanDay = (day: any) => {
     setWorkoutFromPlanDay(day);
@@ -140,18 +177,18 @@ export default function WorkoutsScreen() {
 
         <View style={styles.statsRow}>
           <GlassCard style={styles.statCard}>
-            <Text style={styles.statValue}>{workouts.length}</Text>
-            <Text style={styles.statLabel}>всего</Text>
+            <Text style={styles.statValue}>{workoutStats.total}</Text>
+            <Text style={styles.statLabel}>Тренировок</Text>
           </GlassCard>
 
           <GlassCard style={styles.statCard}>
-            <Text style={styles.statValue}>
-              {workouts.reduce(
-                (sum, workout) => sum + (workout.durationMinutes || 0),
-                0
-              )}
-            </Text>
-            <Text style={styles.statLabel}>минут</Text>
+            <Text style={styles.statValue}>{workoutStats.week}</Text>
+            <Text style={styles.statLabel}>За неделю</Text>
+          </GlassCard>
+
+          <GlassCard style={styles.statCard}>
+            <Text style={styles.statValue}>{workoutStats.last}</Text>
+            <Text style={styles.statLabel}>Последняя</Text>
           </GlassCard>
         </View>
 
@@ -293,15 +330,17 @@ const styles = StyleSheet.create({
   },
   statsRow: {
     flexDirection: "row",
+    flexWrap: "wrap",
     gap: 12,
     marginBottom: 24,
   },
   statCard: {
     flex: 1,
+    minWidth: "30%",
   },
   statValue: {
     color: COLORS.text,
-    fontSize: 30,
+    fontSize: 26,
     fontWeight: "900",
   },
   statLabel: {

@@ -55,6 +55,7 @@ type WorkoutBuilderStore = {
   setWorkoutFromPlanDay: (day: PlanDayForWorkout) => void;
 
   clearWorkout: () => void;
+  resetWorkoutBuilder: () => void;
 };
 
 const createDefaultSets = (exercise: Exercise): WorkoutSet[] => {
@@ -187,6 +188,12 @@ export const useWorkoutBuilderStore = create<WorkoutBuilderStore>((set, get) => 
   },
 
   clearWorkout: () => {
+    set({
+      selectedExercises: [],
+    });
+  },
+
+  resetWorkoutBuilder: () => {
     set({
       selectedExercises: [],
     });

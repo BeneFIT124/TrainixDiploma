@@ -1,6 +1,9 @@
 import NutritionPlan from "../models/NutritionPlan.js";
 import TrainerProfile from "../models/TrainerProfile.js";
 import WorkoutPlan from "../models/WorkoutPlan.js";
+import mongoose from "mongoose";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 const serializeWorkoutPlan = (plan, trainerProfile) => ({
   id: plan._id,
@@ -102,6 +105,14 @@ export const getTrainerProfiles = async (req, res) => {
 
 export const getTrainerProfileById = async (req, res) => {
   try {
+    if (
+      !req.params.id ||
+      req.params.id === "undefined" ||
+      !isValidObjectId(req.params.id)
+    ) {
+      return res.status(400).json({ message: "Некорректный идентификатор тренера" });
+    }
+
     const profile = await TrainerProfile.findOne({
       _id: req.params.id,
       isVerified: true,

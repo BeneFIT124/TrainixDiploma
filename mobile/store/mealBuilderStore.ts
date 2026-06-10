@@ -39,6 +39,7 @@ type MealBuilderStore = {
   updateGrams: (foodId: string, gramsValue: string) => void;
   setMealFromPlanMeal: (meal: PlanMealForNutrition) => void;
   clearMeal: () => void;
+  resetMealBuilder: () => void;
 };
 
 export const useMealBuilderStore = create<MealBuilderStore>((set, get) => ({
@@ -105,6 +106,13 @@ export const useMealBuilderStore = create<MealBuilderStore>((set, get) => ({
   clearMeal: () => {
     set({
       selectedMealType: "Завтрак",
+      selectedFoods: [],
+    });
+  },
+
+  resetMealBuilder: () => {
+    set({
+      selectedMealType: "Р—Р°РІС‚СЂР°Рє",
       selectedFoods: [],
     });
   },

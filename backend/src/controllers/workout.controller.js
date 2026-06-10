@@ -2,6 +2,18 @@ import Workout from "../models/Workout.js";
 import WorkoutItem from "../models/WorkoutItem.js";
 import WorkoutSet from "../models/WorkoutSet.js";
 import Exercise from "../models/Exercise.js";
+import mongoose from "mongoose";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const validateObjectId = (id, res, message = "Некорректный идентификатор") => {
+  if (!id || id === "undefined" || !isValidObjectId(id)) {
+    res.status(400).json({ message });
+    return false;
+  }
+
+  return true;
+};
 
 export const createWorkout = async (req, res) => {
   try {
@@ -42,6 +54,10 @@ export const getLastExerciseSets = async (req, res) => {
   try {
     const { exerciseId } = req.params;
 
+    if (!validateObjectId(exerciseId, res, "Некорректный идентификатор упражнения")) {
+      return;
+    }
+
     const previousItems = await WorkoutItem.find({
       exercise: exerciseId,
     }).sort({ createdAt: -1 });
@@ -73,6 +89,10 @@ export const getLastExerciseSets = async (req, res) => {
 
 export const getWorkoutById = async (req, res) => {
   try {
+    if (!validateObjectId(req.params.id, res, "Некорректный идентификатор тренировки")) {
+      return;
+    }
+
     const workout = await Workout.findOne({
       _id: req.params.id,
       user: req.user._id,
@@ -90,6 +110,10 @@ export const getWorkoutById = async (req, res) => {
 
 export const updateWorkout = async (req, res) => {
   try {
+    if (!validateObjectId(req.params.id, res, "Некорректный идентификатор тренировки")) {
+      return;
+    }
+
     const workout = await Workout.findOne({
       _id: req.params.id,
       user: req.user._id,
@@ -117,6 +141,10 @@ export const updateWorkout = async (req, res) => {
 
 export const deleteWorkout = async (req, res) => {
   try {
+    if (!validateObjectId(req.params.id, res, "Некорректный идентификатор тренировки")) {
+      return;
+    }
+
     const workout = await Workout.findOne({
       _id: req.params.id,
       user: req.user._id,
@@ -144,8 +172,16 @@ export const addWorkoutItem = async (req, res) => {
     const { workoutId } = req.params;
     const { exerciseId, exerciseOrder, comment, useLastSets } = req.body;
 
+    if (!validateObjectId(workoutId, res, "Некорректный идентификатор тренировки")) {
+      return;
+    }
+
     if (!exerciseId) {
       return res.status(400).json({ message: "exerciseId обязателен" });
+    }
+
+    if (!validateObjectId(exerciseId, res, "Некорректный идентификатор упражнения")) {
+      return;
     }
 
     const workout = await Workout.findOne({
@@ -222,6 +258,10 @@ export const getWorkoutItems = async (req, res) => {
   try {
     const { workoutId } = req.params;
 
+    if (!validateObjectId(workoutId, res, "Некорректный идентификатор тренировки")) {
+      return;
+    }
+
     const workout = await Workout.findOne({
       _id: workoutId,
       user: req.user._id,
@@ -244,6 +284,14 @@ export const getWorkoutItems = async (req, res) => {
 export const updateWorkoutItem = async (req, res) => {
   try {
     const { workoutId, itemId } = req.params;
+
+    if (!validateObjectId(workoutId, res, "Некорректный идентификатор тренировки")) {
+      return;
+    }
+
+    if (!validateObjectId(itemId, res, "Некорректный идентификатор элемента тренировки")) {
+      return;
+    }
 
     const workout = await Workout.findOne({
       _id: workoutId,
@@ -279,6 +327,14 @@ export const updateWorkoutItem = async (req, res) => {
 export const deleteWorkoutItem = async (req, res) => {
   try {
     const { workoutId, itemId } = req.params;
+
+    if (!validateObjectId(workoutId, res, "Некорректный идентификатор тренировки")) {
+      return;
+    }
+
+    if (!validateObjectId(itemId, res, "Некорректный идентификатор элемента тренировки")) {
+      return;
+    }
 
     const workout = await Workout.findOne({
       _id: workoutId,

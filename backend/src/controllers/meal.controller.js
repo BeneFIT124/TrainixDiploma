@@ -1,20 +1,84 @@
 import Meal from "../models/Meal.js";
 import MealItem from "../models/MealItem.js";
 import Food from "../models/Food.js";
+import mongoose from "mongoose";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const validateObjectId = (id, res, message = "Некорректный идентификатор") => {
+  if (!id || id === "undefined" || !isValidObjectId(id)) {
+    res.status(400).json({ message });
+    return false;
+  }
+
+  return true;
+};
+
+const getDayBounds = (dateValue) => {
+  const targetDate = dateValue ? new Date(dateValue) : new Date();
+
+  if (Number.isNaN(targetDate.getTime())) {
+    return null;
+  }
+
+  const startOfDay = new Date(targetDate);
+  startOfDay.setHours(0, 0, 0, 0);
+
+  const endOfDay = new Date(targetDate);
+  endOfDay.setHours(23, 59, 59, 999);
+
+  return {
+    targetDate,
+    startOfDay,
+    endOfDay,
+    dateKey: targetDate.toISOString().slice(0, 10),
+  };
+};
 
 export const createMeal = async (req, res) => {
   try {
     const { mealType, date, comment } = req.body;
+    const day = getDayBounds(date);
+
+    if (!["breakfast", "lunch", "dinner", "snack"].includes(mealType)) {
+      return res.status(400).json({ message: "Некорректный тип приема пищи" });
+    }
+
+    if (!day) {
+      return res.status(400).json({ message: "Некорректная дата приема пищи" });
+    }
+
+    const existingMeal = await Meal.findOne({
+      user: req.user._id,
+      mealType,
+      $or: [
+        { dateKey: day.dateKey },
+        { date: { $gte: day.startOfDay, $lte: day.endOfDay } },
+      ],
+    });
+
+    if (existingMeal) {
+      return res.status(409).json({
+        message: "Прием пищи этого типа уже добавлен за выбранный день.",
+      });
+    }
 
     const meal = await Meal.create({
       user: req.user._id,
       mealType,
-      date: date || new Date(),
+      date: day.targetDate,
+      dateKey: day.dateKey,
       comment: comment || null,
     });
 
     res.status(201).json(meal);
   } catch (error) {
+    if (error.code === 11000) {
+      return res.status(409).json({
+        message: "Прием пищи этого типа уже добавлен за выбранный день.",
+      });
+    }
+
     res.status(500).json({ message: error.message });
   }
 };
@@ -33,6 +97,10 @@ export const getMealById = async (req, res) => {
   try {
     const { mealId } = req.params;
 
+    if (!validateObjectId(mealId, res, "Некорректный идентификатор приема пищи")) {
+      return;
+    }
+
     const meal = await Meal.findOne({ _id: mealId, user: req.user._id });
 
     if (!meal) {
@@ -49,6 +117,14 @@ export const addMealItem = async (req, res) => {
   try {
     const { mealId } = req.params;
     const { foodId, grams } = req.body;
+
+    if (!validateObjectId(mealId, res, "Некорректный идентификатор приема пищи")) {
+      return;
+    }
+
+    if (!validateObjectId(foodId, res, "Некорректный идентификатор продукта")) {
+      return;
+    }
 
     const meal = await Meal.findOne({ _id: mealId, user: req.user._id });
     if (!meal) {
@@ -94,6 +170,10 @@ export const getMealItems = async (req, res) => {
   try {
     const { mealId } = req.params;
 
+    if (!validateObjectId(mealId, res, "Некорректный идентификатор приема пищи")) {
+      return;
+    }
+
     const meal = await Meal.findOne({ _id: mealId, user: req.user._id });
     if (!meal) {
       return res.status(404).json({ message: "Прием пищи не найден" });
@@ -110,17 +190,15 @@ export const getDailyNutritionSummary = async (req, res) => {
   try {
     const { date } = req.query;
 
-    const targetDate = date ? new Date(date) : new Date();
+    const day = getDayBounds(date);
 
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    if (!day) {
+      return res.status(400).json({ message: "Некорректная дата" });
+    }
 
     const meals = await Meal.find({
       user: req.user._id,
-      date: { $gte: startOfDay, $lte: endOfDay },
+      date: { $gte: day.startOfDay, $lte: day.endOfDay },
     });
 
     const summary = meals.reduce(
@@ -156,7 +234,7 @@ export const getDailyNutritionSummary = async (req, res) => {
     };
 
     res.status(200).json({
-      date: startOfDay,
+      date: day.startOfDay,
       consumed: {
         totalCalories: Number(summary.totalCalories.toFixed(2)),
         totalProtein: Number(summary.totalProtein.toFixed(2)),
@@ -179,17 +257,15 @@ export const getMealsByDate = async (req, res) => {
       return res.status(400).json({ message: "Дата обязательна" });
     }
 
-    const targetDate = new Date(date);
+    const day = getDayBounds(date);
 
-    const startOfDay = new Date(targetDate);
-    startOfDay.setHours(0, 0, 0, 0);
-
-    const endOfDay = new Date(targetDate);
-    endOfDay.setHours(23, 59, 59, 999);
+    if (!day) {
+      return res.status(400).json({ message: "Некорректная дата" });
+    }
 
     const meals = await Meal.find({
       user: req.user._id,
-      date: { $gte: startOfDay, $lte: endOfDay },
+      date: { $gte: day.startOfDay, $lte: day.endOfDay },
     }).sort({ date: 1 });
 
     res.status(200).json(meals);
@@ -200,6 +276,14 @@ export const getMealsByDate = async (req, res) => {
 export const deleteMealItem = async (req, res) => {
   try {
     const { mealId, itemId } = req.params;
+
+    if (!validateObjectId(mealId, res, "Некорректный идентификатор приема пищи")) {
+      return;
+    }
+
+    if (!validateObjectId(itemId, res, "Некорректный идентификатор элемента приема пищи")) {
+      return;
+    }
 
     const meal = await Meal.findOne({ _id: mealId, user: req.user._id });
     if (!meal) {
@@ -232,6 +316,10 @@ export const deleteMealItem = async (req, res) => {
 export const deleteMeal = async (req, res) => {
   try {
     const { mealId } = req.params;
+
+    if (!validateObjectId(mealId, res, "Некорректный идентификатор приема пищи")) {
+      return;
+    }
 
     const meal = await Meal.findOne({ _id: mealId, user: req.user._id });
     if (!meal) {

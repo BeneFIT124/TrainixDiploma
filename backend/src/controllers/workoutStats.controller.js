@@ -1,6 +1,9 @@
 import Workout from "../models/Workout.js";
 import WorkoutItem from "../models/WorkoutItem.js";
 import WorkoutSet from "../models/WorkoutSet.js";
+import mongoose from "mongoose";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
 
 export const getWeeklyWorkoutSummary = async (req, res) => {
   try {
@@ -68,6 +71,10 @@ export const getWeeklyWorkoutSummary = async (req, res) => {
 export const getExerciseProgress = async (req, res) => {
   try {
     const { exerciseId } = req.params;
+
+    if (!exerciseId || exerciseId === "undefined" || !isValidObjectId(exerciseId)) {
+      return res.status(400).json({ message: "Некорректный идентификатор упражнения" });
+    }
 
     const workouts = await Workout.find({ user: req.user._id }).select(
       "_id workoutDate title"

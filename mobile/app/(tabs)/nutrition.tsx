@@ -12,6 +12,7 @@ import MealCard from "@/components/nutrition/MealCard";
 import { COLORS } from "@/constants/colors";
 import { useActivePlanStore } from "@/store/activePlanStore";
 import { useMealBuilderStore } from "@/store/mealBuilderStore";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   DailyNutritionSummary,
   getDailyNutritionSummary,
@@ -26,6 +27,7 @@ type MealWithItemsCount = Meal & {
 };
 
 export default function NutritionScreen() {
+  const { user } = useAuth();
   const { activeNutritionPlan } = useActivePlanStore();
   const { setMealFromPlanMeal } = useMealBuilderStore();
   const [meals, setMeals] = useState<MealWithItemsCount[]>([]);
@@ -34,8 +36,16 @@ export default function NutritionScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const today = useMemo(() => new Date().toISOString(), []);
+  const userId = user?._id || user?.id || null;
 
   const loadNutrition = useCallback(async () => {
+    if (!userId) {
+      setMeals([]);
+      setSummary(null);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -66,7 +76,7 @@ export default function NutritionScreen() {
     } finally {
       setIsLoading(false);
     }
-  }, [today]);
+  }, [today, userId]);
 
   useFocusEffect(
     useCallback(() => {

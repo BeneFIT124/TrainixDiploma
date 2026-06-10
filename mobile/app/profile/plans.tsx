@@ -9,6 +9,7 @@ import AppButton from "@/components/ui/AppButton";
 import PurchasedPlanCard from "@/components/profile/PurchasedPlanCard";
 
 import { COLORS } from "@/constants/colors";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   getMyPurchasedPlans,
   getPlanRouteId,
@@ -26,11 +27,20 @@ const planTypeLabel = {
 };
 
 export default function MyPlansScreen() {
+  const { user } = useAuth();
   const [plans, setPlans] = useState<PurchasedPlan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const loadPlans = async () => {
+  const userId = user?._id || user?.id || null;
+
+  const loadPlans = useCallback(async () => {
+    if (!userId) {
+      setPlans([]);
+      setIsLoading(false);
+      return;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -45,12 +55,12 @@ export default function MyPlansScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [userId]);
 
   useFocusEffect(
     useCallback(() => {
       loadPlans();
-    }, [])
+    }, [loadPlans])
   );
 
   return (

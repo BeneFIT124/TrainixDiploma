@@ -1,11 +1,27 @@
 import Workout from "../models/Workout.js";
 import WorkoutItem from "../models/WorkoutItem.js";
 import WorkoutSet from "../models/WorkoutSet.js";
+import mongoose from "mongoose";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const validateObjectId = (id, res, message = "Некорректный идентификатор") => {
+  if (!id || id === "undefined" || !isValidObjectId(id)) {
+    res.status(400).json({ message });
+    return false;
+  }
+
+  return true;
+};
 
 export const addWorkoutSet = async (req, res) => {
   try {
     const { itemId } = req.params;
     const { setNumber, reps, weightKg } = req.body;
+
+    if (!validateObjectId(itemId, res, "Некорректный идентификатор элемента тренировки")) {
+      return;
+    }
 
     if (setNumber == null || reps == null || weightKg == null) {
       return res.status(400).json({
@@ -44,6 +60,10 @@ export const getWorkoutSets = async (req, res) => {
   try {
     const { itemId } = req.params;
 
+    if (!validateObjectId(itemId, res, "Некорректный идентификатор элемента тренировки")) {
+      return;
+    }
+
     const item = await WorkoutItem.findById(itemId);
     if (!item) {
       return res.status(404).json({ message: "Элемент тренировки не найден" });
@@ -73,6 +93,14 @@ export const updateWorkoutSet = async (req, res) => {
   try {
     const { itemId, setId } = req.params;
     const { setNumber, reps, weightKg } = req.body;
+
+    if (!validateObjectId(itemId, res, "Некорректный идентификатор элемента тренировки")) {
+      return;
+    }
+
+    if (!validateObjectId(setId, res, "Некорректный идентификатор подхода")) {
+      return;
+    }
 
     const item = await WorkoutItem.findById(itemId);
     if (!item) {
@@ -112,6 +140,14 @@ export const updateWorkoutSet = async (req, res) => {
 export const deleteWorkoutSet = async (req, res) => {
   try {
     const { itemId, setId } = req.params;
+
+    if (!validateObjectId(itemId, res, "Некорректный идентификатор элемента тренировки")) {
+      return;
+    }
+
+    if (!validateObjectId(setId, res, "Некорректный идентификатор подхода")) {
+      return;
+    }
 
     const item = await WorkoutItem.findById(itemId);
     if (!item) {

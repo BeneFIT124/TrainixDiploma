@@ -1,4 +1,16 @@
 import Exercise from "../models/Exercise.js";
+import mongoose from "mongoose";
+
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+const validateObjectId = (id, res, message = "Некорректный идентификатор упражнения") => {
+  if (!id || id === "undefined" || !isValidObjectId(id)) {
+    res.status(400).json({ message });
+    return false;
+  }
+
+  return true;
+};
 
 export const createExercise = async (req, res) => {
   try {
@@ -43,6 +55,10 @@ export const getExercises = async (req, res) => {
 };
 export const deleteExercise = async (req, res) => {
   try {
+    if (!validateObjectId(req.params.id, res)) {
+      return;
+    }
+
     const exercise = await Exercise.findById(req.params.id);
 
     if (!exercise) {

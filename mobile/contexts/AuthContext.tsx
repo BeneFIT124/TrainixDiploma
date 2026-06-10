@@ -15,6 +15,9 @@ import {
   RegisterData,
 } from "@/services/authService";
 import { AUTH_TOKEN_KEY, AUTH_USER_KEY } from "@/constants/api";
+import { useActivePlanStore } from "@/store/activePlanStore";
+import { useMealBuilderStore } from "@/store/mealBuilderStore";
+import { useWorkoutBuilderStore } from "@/store/workoutBuilderStore";
 
 type AuthContextType = {
   user: AuthUser | null;
@@ -37,6 +40,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const isAuthenticated = !!token && !!user;
 
+  const resetUserScopedStores = () => {
+    useActivePlanStore.getState().resetActivePlans();
+    useMealBuilderStore.getState().resetMealBuilder();
+    useWorkoutBuilderStore.getState().resetWorkoutBuilder();
+  };
+
   useEffect(() => {
     loadAuthData();
   }, []);
@@ -44,6 +53,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const clearAuthData = async () => {
     await AsyncStorage.removeItem(AUTH_TOKEN_KEY);
     await AsyncStorage.removeItem(AUTH_USER_KEY);
+    resetUserScopedStores();
     setToken(null);
     setUser(null);
   };
@@ -64,6 +74,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const saveAuthData = async (newToken: string, newUser: AuthUser) => {
+    resetUserScopedStores();
     await AsyncStorage.setItem(AUTH_TOKEN_KEY, newToken);
     await AsyncStorage.setItem(AUTH_USER_KEY, JSON.stringify(newUser));
 

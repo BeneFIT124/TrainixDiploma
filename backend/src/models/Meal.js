@@ -17,6 +17,10 @@ const mealSchema = new mongoose.Schema(
       required: true,
       default: Date.now,
     },
+    dateKey: {
+      type: String,
+      required: true,
+    },
     totalCalories: {
       type: Number,
       default: 0,
@@ -39,6 +43,20 @@ const mealSchema = new mongoose.Schema(
     },
   },
   { timestamps: true }
+);
+
+mealSchema.pre("validate", function setDateKey(next) {
+  const sourceDate = this.date ? new Date(this.date) : new Date();
+  this.dateKey = sourceDate.toISOString().slice(0, 10);
+  next();
+});
+
+mealSchema.index(
+  { user: 1, dateKey: 1, mealType: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { dateKey: { $type: "string" } },
+  }
 );
 
 const Meal = mongoose.model("Meal", mealSchema);

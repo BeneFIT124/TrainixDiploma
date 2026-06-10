@@ -53,6 +53,42 @@ const buildWorkoutPlanDays = (plan, items = []) => {
     }));
 };
 
+const buildWorkoutPlanPreviewDays = (plan, items = []) => {
+  const days = items.reduce((groups, item) => {
+    const dayNumber = item.dayNumber || 1;
+    const dayItems = groups.get(dayNumber) || [];
+    dayItems.push(item);
+    groups.set(dayNumber, dayItems);
+    return groups;
+  }, new Map());
+
+  return Array.from(days.entries())
+    .sort(([first], [second]) => first - second)
+    .map(([dayNumber, dayItems]) => {
+      const muscleGroups = [
+        ...new Set(
+          dayItems
+            .map(
+              (item) =>
+                item.exercise?.primaryMuscleGroup ||
+                item.exercise?.muscleGroup ||
+                null
+            )
+            .filter(Boolean)
+        ),
+      ];
+
+      return {
+        id: `${plan._id}-day-${dayNumber}`,
+        dayNumber,
+        title: `День ${dayNumber}`,
+        exercisesCount: dayItems.length,
+        muscleGroups,
+        exercises: [],
+      };
+    });
+};
+
 const buildNutritionPlanDays = (plan, items = []) => {
   const days = items.reduce((groups, item) => {
     const dayNumber = item.dayNumber || 1;
@@ -97,6 +133,27 @@ const buildNutritionPlanDays = (plan, items = []) => {
     });
 };
 
+const buildNutritionPlanPreviewDays = (plan, items = []) => {
+  const days = items.reduce((groups, item) => {
+    const dayNumber = item.dayNumber || 1;
+    const dayItems = groups.get(dayNumber) || [];
+    dayItems.push(item);
+    groups.set(dayNumber, dayItems);
+    return groups;
+  }, new Map());
+
+  return Array.from(days.entries())
+    .sort(([first], [second]) => first - second)
+    .map(([dayNumber, dayItems]) => ({
+      id: `${plan._id}-day-${dayNumber}`,
+      dayNumber,
+      title: `День ${dayNumber}`,
+      productsCount: dayItems.length,
+      mealTypes: [...new Set(dayItems.map((item) => item.mealType || "snack"))],
+      meals: [],
+    }));
+};
+
 const serializeWorkoutPlan = (plan, items = []) => ({
   id: plan._id,
   _id: plan._id,
@@ -111,6 +168,25 @@ const serializeWorkoutPlan = (plan, items = []) => ({
   trainerProfile: plan.trainerProfile,
   items,
   days: buildWorkoutPlanDays(plan, items),
+  createdAt: plan.createdAt,
+});
+
+const serializeWorkoutPlanPreview = (plan, items = []) => ({
+  id: plan._id,
+  _id: plan._id,
+  type: "workout",
+  title: plan.title,
+  description: plan.description,
+  goalType: plan.goalType,
+  difficultyLevel: plan.difficultyLevel,
+  durationWeeks: plan.durationWeeks,
+  price: plan.price,
+  isActive: plan.isActive,
+  trainerProfile: plan.trainerProfile,
+  contentLocked: true,
+  isPurchased: false,
+  items: [],
+  days: buildWorkoutPlanPreviewDays(plan, items),
   createdAt: plan.createdAt,
 });
 
@@ -133,6 +209,44 @@ const serializeNutritionPlan = (plan, items = []) => ({
   days: buildNutritionPlanDays(plan, items),
   createdAt: plan.createdAt,
 });
+
+const serializeNutritionPlanPreview = (plan, items = []) => ({
+  id: plan._id,
+  _id: plan._id,
+  type: "nutrition",
+  title: plan.title,
+  description: plan.description,
+  goalType: plan.goalType,
+  dailyCalories: plan.dailyCalories,
+  dailyProtein: plan.dailyProtein,
+  dailyFat: plan.dailyFat,
+  dailyCarbs: plan.dailyCarbs,
+  price: plan.price,
+  isActive: plan.isActive,
+  trainerProfile: plan.trainerProfile,
+  contentLocked: true,
+  isPurchased: false,
+  items: [],
+  nutritionPlanItems: [],
+  days: buildNutritionPlanPreviewDays(plan, items),
+  createdAt: plan.createdAt,
+});
+
+const isTrainerOwner = (plan, userId) => {
+  const trainerUserId = plan.trainerProfile?.user?._id || plan.trainerProfile?.user;
+  return trainerUserId && String(trainerUserId) === String(userId);
+};
+
+const hasPurchasedPlan = async (userId, type, planId) => {
+  const purchase = await PlanPurchase.findOne({
+    user: userId,
+    planType: type,
+    status: "active",
+    ...(type === "workout" ? { workoutPlan: planId } : { nutritionPlan: planId }),
+  }).select("_id");
+
+  return Boolean(purchase);
+};
 
 export const getPlans = async (req, res) => {
   try {
@@ -173,7 +287,17 @@ export const getPlanById = async (req, res) => {
         .populate("exercise")
         .sort({ dayNumber: 1, exerciseOrder: 1, createdAt: 1 });
 
-      return res.status(200).json(serializeWorkoutPlan(plan, items));
+      const canViewFullContent =
+        isTrainerOwner(plan, req.user._id) ||
+        (await hasPurchasedPlan(req.user._id, "workout", plan._id));
+
+      return res
+        .status(200)
+        .json(
+          canViewFullContent
+            ? { ...serializeWorkoutPlan(plan, items), contentLocked: false, isPurchased: true }
+            : serializeWorkoutPlanPreview(plan, items)
+        );
     }
 
     if (type === "nutrition") {
@@ -187,7 +311,17 @@ export const getPlanById = async (req, res) => {
         .populate("food")
         .sort({ dayNumber: 1, mealType: 1, itemOrder: 1, createdAt: 1 });
 
-      return res.status(200).json(serializeNutritionPlan(plan, items));
+      const canViewFullContent =
+        isTrainerOwner(plan, req.user._id) ||
+        (await hasPurchasedPlan(req.user._id, "nutrition", plan._id));
+
+      return res
+        .status(200)
+        .json(
+          canViewFullContent
+            ? { ...serializeNutritionPlan(plan, items), contentLocked: false, isPurchased: true }
+            : serializeNutritionPlanPreview(plan, items)
+        );
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
