@@ -2,9 +2,11 @@
 
 # Trainix
 
-### Your training. Your nutrition. Your progress.
+### Тренировки. Питание. Прогресс.
 
-A full-stack fitness tracking application built with **React Native**, **Expo**, **Node.js**, **Express** and **MongoDB**.
+Мобильное приложение для учёта тренировок и питания с поддержкой программ от тренеров.
+
+**React Native · Expo · TypeScript · Node.js · Express · MongoDB**
 
 [![React Native](https://img.shields.io/badge/React_Native-0.81-61DAFB?logo=react&logoColor=white)](https://reactnative.dev/)
 [![Expo](https://img.shields.io/badge/Expo-54-000020?logo=expo&logoColor=white)](https://expo.dev/)
@@ -13,97 +15,97 @@ A full-stack fitness tracking application built with **React Native**, **Expo**,
 [![Express](https://img.shields.io/badge/Express-5-000000?logo=express&logoColor=white)](https://expressjs.com/)
 [![MongoDB](https://img.shields.io/badge/MongoDB-Mongoose-47A248?logo=mongodb&logoColor=white)](https://www.mongodb.com/)
 
-[Features](#-features) · [Architecture](#-architecture) · [Tech Stack](#-tech-stack) · [Getting Started](#-getting-started) · [API](#-api-overview)
+[Возможности](#-возможности) · [Архитектура](#-архитектура) · [Технологии](#-технологический-стек) · [Установка](#-установка-и-запуск) · [API](#-обзор-api)
 
 </div>
 
 ---
 
-## 📌 About
+## 📌 О проекте
 
-**Trainix** is a mobile fitness application designed to bring workout tracking, nutrition logging and trainer-created programs together in one place.
+**Trainix** — мобильное приложение для комплексного учёта физической активности и питания. Оно объединяет дневник тренировок, контроль калорий и макронутриентов, персональную статистику и программы, подготовленные тренерами.
 
-The project follows a client–server architecture: the mobile application communicates with a separately deployed REST API, while the backend handles authentication, business logic and persistence in MongoDB.
+Проект построен по клиент-серверной архитектуре: мобильное приложение взаимодействует с REST API, сервер обрабатывает запросы и бизнес-логику, а MongoDB используется для хранения данных.
 
-The repository contains two independent applications:
+Репозиторий состоит из двух самостоятельных частей:
 
-- **\`mobile/\`** — cross-platform mobile client built with React Native, Expo and TypeScript.
-- **\`backend/\`** — REST API built with Node.js, Express and Mongoose.
+- **`mobile/`** — мобильное приложение на React Native, Expo и TypeScript.
+- **`backend/`** — серверное приложение на Node.js, Express и Mongoose.
 
-This repository is a diploma project and a practical demonstration of full-stack application development.
+Проект разработан в рамках дипломной работы и демонстрирует практические навыки создания full-stack приложения: от мобильного интерфейса до серверной логики и проектирования базы данных.
 
-## ✨ Features
+## ✨ Возможности
 
-### 🏋️ Workout tracking
+### 🏋️ Учёт тренировок
 
-- Create, edit and delete workouts.
-- Add exercises to a workout and arrange their order.
-- Record sets, repetitions and working weight.
-- Reuse the previous sets for an exercise when creating a new workout.
-- Track workout duration and completion status.
-- View weekly workout summaries and exercise progress.
+- Создание, редактирование и удаление тренировок.
+- Добавление упражнений в тренировку и управление их порядком.
+- Запись подходов, количества повторений и рабочего веса.
+- Использование предыдущих результатов упражнения при создании новой тренировки.
+- Учёт продолжительности и статуса тренировки.
+- Просмотр недельной статистики и динамики результатов по упражнениям.
 
-### 🥗 Nutrition tracking
+### 🥗 Учёт питания
 
-- Keep a daily food diary with breakfast, lunch, dinner and snacks.
-- Add food items by weight in grams.
-- Calculate calories, protein, fat and carbohydrates from food nutrition values.
-- View daily consumed, target and remaining nutrition values.
-- Browse meals by date.
-- Prevent duplicate meal slots of the same type for a user on a given day.
+- Дневник питания с разделением на завтрак, обед, ужин и перекусы.
+- Добавление продуктов с указанием массы в граммах.
+- Расчёт калорий, белков, жиров и углеводов на основе пищевой ценности продукта.
+- Отображение потреблённых, целевых и оставшихся значений КБЖУ.
+- Просмотр записей питания за выбранную дату.
+- Ограничение на создание нескольких приёмов пищи одного типа за день для одного пользователя.
 
-### 👤 User profile and dashboard
+### 👤 Профиль и главная панель
 
-- Register and sign in using email and password.
-- Store personal profile data, including height, weight, activity level and fitness goal.
-- Display daily nutrition progress and workout activity on the dashboard.
-- View the latest workout and weekly statistics.
-- Persist the authenticated session between application launches.
+- Регистрация и авторизация по электронной почте и паролю.
+- Хранение персональных параметров: рост, вес, уровень активности и цель тренировок.
+- Отображение прогресса питания и тренировочной активности.
+- Просмотр последней тренировки и недельной статистики.
+- Сохранение пользовательской сессии между запусками приложения.
 
-### 🧑‍🏫 Trainers and programs
+### 🧑‍🏫 Тренеры и программы
 
-- Browse trainer profiles.
-- View workout and nutrition programs created by trainers.
-- Create and manage workout and nutrition plans with day-by-day content.
-- Purchase a plan and access its full content.
-- Submit an application to become a trainer.
-- Allow administrators to review trainer applications.
-- Leave a 1–5 rating and written review after purchasing a trainer's plan.
+- Просмотр профилей тренеров.
+- Каталог тренировочных программ и планов питания.
+- Создание и управление программами со структурой по дням.
+- Покупка программы и получение доступа к её содержимому.
+- Подача заявки на получение роли тренера.
+- Рассмотрение заявок администраторами.
+- Возможность оставить оценку от 1 до 5 и текстовый отзыв после покупки программы.
 
-> **Implementation note:** the repository also contains mock-data modules. The README describes capabilities verified in the source code; it does not imply that every screen or workflow has been validated in a production environment.
+> **Примечание:** в проекте также присутствуют модули с тестовыми данными. Наличие реализации в исходном коде не означает, что каждый сценарий прошёл полноценное тестирование в production-среде.
 
-## 🧰 Tech Stack
+## 🧰 Технологический стек
 
-| Area | Technologies |
+| Область | Технологии |
 |---|---|
-| Mobile application | React Native, Expo, TypeScript |
-| Navigation | Expo Router, React Navigation |
-| UI and interaction | React Native components, Expo Blur, Expo Linear Gradient, Expo Haptics |
-| Client state | React Context, Zustand |
-| Local persistence | AsyncStorage |
-| HTTP communication | Fetch API |
-| Backend runtime | Node.js, JavaScript ES Modules |
-| API framework | Express 5 |
-| Database | MongoDB, Mongoose |
-| Authentication | JSON Web Tokens, bcryptjs |
-| Configuration | dotenv |
-| Cross-origin requests | CORS |
-| Media SDK configuration | Cloudinary SDK |
+| Мобильная разработка | React Native, Expo, TypeScript |
+| Навигация | Expo Router, React Navigation |
+| Интерфейс и анимации | React Native Components, Expo Blur, Expo Linear Gradient, Expo Haptics |
+| Управление состоянием | React Context, Zustand |
+| Локальное хранение | AsyncStorage |
+| HTTP-запросы | Fetch API |
+| Серверная платформа | Node.js, JavaScript ES Modules |
+| Backend-фреймворк | Express 5 |
+| База данных | MongoDB, Mongoose |
+| Аутентификация | JSON Web Tokens, bcryptjs |
+| Конфигурация | dotenv |
+| Междоменные запросы | CORS |
+| Работа с медиа | Cloudinary SDK (конфигурация) |
 
-Dependency versions are managed in the respective lockfiles: \`mobile/package-lock.json\` and \`backend/package-lock.json\`.
+Версии зависимостей зафиксированы в файлах `mobile/package-lock.json` и `backend/package-lock.json`.
 
-## 🏗️ Architecture
+## 🏗️ Архитектура
 
-Trainix uses a layered client–server architecture.
+Trainix использует многоуровневую клиент-серверную архитектуру.
 
-\`\`\`mermaid
+```mermaid
 flowchart TB
-    subgraph Client["Mobile application — Expo / React Native"]
-        Screens["Screens and UI components"]
+    subgraph Client["Мобильное приложение — Expo / React Native"]
+        Screens["Экраны и UI-компоненты"]
         Navigation["Expo Router"]
         Context["AuthContext"]
-        Services["API service modules"]
-        Stores["Zustand stores"]
+        Services["API-сервисы"]
+        Stores["Zustand Stores"]
         Storage["AsyncStorage"]
         Screens <--> Navigation
         Screens --> Services
@@ -111,368 +113,377 @@ flowchart TB
         Context <--> Storage
         Context --> Services
     end
-
-    subgraph Server["Backend — Node.js / Express"]
-        Routes["REST routes"]
-        Auth["JWT authentication"]
-        Roles["Role authorization"]
-        Controllers["Controllers"]
-        Models["Mongoose models"]
+    subgraph Server["Сервер — Node.js / Express"]
+        Routes["REST-маршруты"]
+        Auth["JWT-аутентификация"]
+        Roles["Проверка ролей"]
+        Controllers["Контроллеры"]
+        Models["Mongoose-модели"]
         Routes --> Auth
         Auth --> Roles
         Roles --> Controllers
         Controllers --> Models
     end
-
     Database[("MongoDB")]
     Client <-->|"HTTP / JSON"| Routes
     Models <--> Database
-\`\`\`
+```
 
-### Request lifecycle
+### Жизненный цикл запроса
 
-1. A user interacts with a screen in the mobile application.
-2. A service module sends an HTTP request to the configured API base URL.
-3. The API client retrieves the stored JWT and attaches it as a Bearer token when authentication is required.
-4. Express routes pass protected requests through authentication middleware.
-5. Role middleware checks permissions on routes restricted to trainers or administrators.
-6. Controllers validate input, execute application logic and interact with Mongoose models.
-7. The API returns a JSON response to the mobile client.
+1. Пользователь выполняет действие на одном из экранов мобильного приложения.
+2. Соответствующий сервис отправляет HTTP-запрос на настроенный адрес API.
+3. API-клиент получает сохранённый JWT и добавляет его в заголовок `Authorization: Bearer <token>`, если запрос требует авторизации.
+4. Express передаёт защищённые запросы через middleware аутентификации.
+5. Middleware проверки ролей определяет, имеет ли пользователь необходимые права.
+6. Контроллер обрабатывает запрос, выполняет бизнес-логику и взаимодействует с Mongoose-моделями.
+7. Сервер возвращает JSON-ответ мобильному приложению.
 
-### Backend layers
+### Слои серверной части
 
-| Layer | Responsibility |
+| Слой | Назначение |
 |---|---|
-| Routes | Define HTTP methods, URL patterns and middleware |
-| Middleware | Authenticate requests and enforce role-based access |
-| Controllers | Implement application rules and process requests |
-| Models | Define MongoDB document schemas, validation and indexes |
-| Config | Initialize environment variables, database connection and Cloudinary SDK configuration |
+| Routes | Определение HTTP-методов, URL и цепочек middleware |
+| Middleware | Проверка JWT и разграничение доступа по ролям |
+| Controllers | Обработка запросов и реализация бизнес-логики |
+| Models | Описание схем MongoDB, валидаций и индексов |
+| Config | Настройка переменных окружения, подключения к БД и Cloudinary SDK |
 
-### Authentication and authorization
+### Аутентификация и авторизация
 
-- Passwords are hashed with **bcryptjs** before being stored.
-- The API issues JWTs with a 30-day expiration.
-- Protected endpoints expect \`Authorization: Bearer <token>\`.
-- The authentication middleware verifies the token and loads the current user.
-- The role middleware supports the \`user\`, \`trainer\` and \`admin\` roles.
+- Пароли хешируются с помощью **bcryptjs** перед сохранением.
+- Сервер выдаёт JWT со сроком действия 30 дней.
+- Для защищённых маршрутов используется заголовок `Authorization: Bearer <token>`.
+- Middleware аутентификации проверяет токен и загружает текущего пользователя.
+- Middleware ролей поддерживает роли `user`, `trainer` и `admin`.
 
-## 📁 Project Structure
+## 📁 Структура проекта
 
-\`\`\`text
+```text
 TrainixDiploma/
 ├── backend/
 │   ├── src/
-│   │   ├── config/          # Environment, database and Cloudinary setup
-│   │   ├── controllers/     # Request handlers and business logic
-│   │   ├── middleware/      # JWT authentication and role checks
-│   │   ├── models/          # Mongoose schemas
-│   │   ├── routes/          # REST API route definitions
-│   │   ├── seed/            # Static food and exercise data
-│   │   ├── app.js           # Express application and route mounting
-│   │   └── server.js        # Database connection and server startup
+│   │   ├── config/          # Переменные окружения, БД и Cloudinary
+│   │   ├── controllers/     # Обработчики запросов и бизнес-логика
+│   │   ├── middleware/      # JWT-аутентификация и проверка ролей
+│   │   ├── models/          # Mongoose-схемы
+│   │   ├── routes/          # Маршруты REST API
+│   │   ├── seed/            # Начальные данные продуктов и упражнений
+│   │   ├── app.js           # Настройка Express и подключение маршрутов
+│   │   └── server.js        # Подключение к БД и запуск сервера
 │   ├── package.json
 │   └── package-lock.json
 │
 └── mobile/
-    ├── app/                 # Expo Router screens and layouts
-    │   ├── (auth)/          # Login and registration
-    │   ├── (tabs)/          # Dashboard, workouts, nutrition, trainers, profile
-    │   ├── nutrition/       # Meal and food flows
-    │   ├── plans/           # Trainer plan details
-    │   ├── profile/         # Profile and purchased plans
-    │   ├── reviews/         # Trainer reviews
-    │   ├── trainer-panel/   # Trainer plan management
-    │   ├── trainers/        # Trainer details
-    │   └── workouts/        # Workout creation and details
-    ├── components/          # Reusable UI and feature components
-    ├── constants/           # API URL, colors, spacing and typography
-    ├── contexts/            # Authentication context
-    ├── data/                # Mock data modules
-    ├── hooks/               # Custom hooks
-    ├── lib/                 # Shared utilities and storage
-    ├── services/            # API communication by feature
-    ├── store/               # Zustand stores
-    ├── types/               # TypeScript types
-    ├── utils/               # Validation, formatting and calculations
+    ├── app/                 # Экраны и навигация Expo Router
+    │   ├── (auth)/          # Регистрация и авторизация
+    │   ├── (tabs)/          # Главная, тренировки, питание, тренеры, профиль
+    │   ├── nutrition/       # Сценарии работы с питанием
+    │   ├── plans/           # Просмотр программ тренеров
+    │   ├── profile/         # Профиль и приобретённые программы
+    │   ├── reviews/         # Отзывы о тренерах
+    │   ├── trainer-panel/   # Управление программами тренера
+    │   ├── trainers/        # Страницы тренеров
+    │   └── workouts/        # Создание и просмотр тренировок
+    ├── components/          # Переиспользуемые UI-компоненты
+    ├── constants/           # API URL, цвета, отступы и типографика
+    ├── contexts/            # Контекст авторизации
+    ├── data/                # Модули тестовых данных
+    ├── hooks/               # Пользовательские React-хуки
+    ├── lib/                 # Общие утилиты и работа с хранилищем
+    ├── services/            # Сервисы взаимодействия с API
+    ├── store/               # Zustand-хранилища
+    ├── types/               # TypeScript-типы
+    ├── utils/               # Валидация, форматирование и расчёты
     ├── app.json
     ├── package.json
     └── package-lock.json
-\`\`\`
+```
 
-## 🚀 Getting Started
+## 🚀 Установка и запуск
 
-### Prerequisites
+### Необходимое программное обеспечение
 
-Install the following tools before running the project:
-
-- [Node.js](https://nodejs.org/) and npm.
-- [MongoDB](https://www.mongodb.com/) — a local instance or a MongoDB Atlas connection string.
-- [Expo Go](https://expo.dev/go) for a compatible physical device, or an Android/iOS emulator.
+- [Node.js](https://nodejs.org/) и npm.
+- [MongoDB](https://www.mongodb.com/) — локально или через MongoDB Atlas.
+- [Expo Go](https://expo.dev/go) для запуска на совместимом физическом устройстве либо Android/iOS-эмулятор.
 - [Git](https://git-scm.com/).
 
-### 1. Clone the repository
+### 1. Клонирование репозитория
 
-\`\`\`bash
+```bash
 git clone https://github.com/BeneFIT124/TrainixDiploma.git
 cd TrainixDiploma
-\`\`\`
+```
 
-### 2. Configure the backend
+### 2. Настройка Backend
 
-Move into the backend directory and install dependencies:
+Перейдите в директорию сервера и установите зависимости:
 
-\`\`\`bash
+```bash
 cd backend
 npm install
-\`\`\`
+```
 
-Create a \`.env\` file in the \`backend/\` directory:
+Создайте файл `.env` в директории `backend/`:
 
-\`\`\`env
+```env
 PORT=3000
 NODE_ENV=development
 
 MONGO_URI=mongodb://127.0.0.1:27017/trainix
 JWT_SECRET=replace_with_a_long_random_secret
-\`\`\`
+```
 
-| Variable | Required | Description |
+#### Переменные окружения Backend
+
+| Переменная | Обязательная | Описание |
 |---|---|---|
-| \`MONGO_URI\` | Yes | MongoDB connection string |
-| \`JWT_SECRET\` | Yes | Secret used to sign and verify JWTs |
-| \`PORT\` | No | API port; defaults to \`3000\` |
-| \`NODE_ENV\` | No | Runtime environment; defaults to \`development\` |
-| \`CLOUDINARY_CLOUD_NAME\` | No* | Cloudinary cloud name used by the SDK configuration |
-| \`CLOUDINARY_API_KEY\` | No* | Cloudinary API key |
-| \`CLOUDINARY_API_SECRET\` | No* | Cloudinary API secret |
+| `MONGO_URI` | Да | Строка подключения к MongoDB |
+| `JWT_SECRET` | Да | Секрет для создания и проверки JWT |
+| `PORT` | Нет | Порт сервера, по умолчанию `3000` |
+| `NODE_ENV` | Нет | Окружение приложения, по умолчанию `development` |
+| `CLOUDINARY_CLOUD_NAME` | Нет* | Название Cloudinary Cloud |
+| `CLOUDINARY_API_KEY` | Нет* | API-ключ Cloudinary |
+| `CLOUDINARY_API_SECRET` | Нет* | Секретный ключ Cloudinary |
 
-\`* \`The Cloudinary configuration module reads these values, but the inspected API routes do not currently expose a verified upload workflow. They are not required by the backend environment validation.
+\* Модуль конфигурации Cloudinary читает эти значения, однако в проверенных API-маршрутах не обнаружен подтверждённый сценарий загрузки файлов. Для прохождения проверки обязательных переменных backend эти параметры не требуются.
 
-Start the backend in development mode:
+Запуск сервера в режиме разработки:
 
-\`\`\`bash
+```bash
 npm run dev
-\`\`\`
+```
 
-Or start it without Nodemon:
+Обычный запуск:
 
-\`\`\`bash
+```bash
 npm start
-\`\`\`
+```
 
-The API will listen on the configured port. Check its health endpoint:
+Проверить работоспособность сервера можно запросом:
 
-\`\`\`http
+```http
 GET http://localhost:3000/api/health
-\`\`\`
+```
 
-Expected response:
+Ожидаемый ответ:
 
-\`\`\`json
+```json
 {
   "message": "Success"
 }
-\`\`\`
+```
 
-### 3. Configure and run the mobile application
+### 3. Настройка Mobile
 
-Open a second terminal from the repository root:
+Откройте второй терминал в корне репозитория:
 
-\`\`\`bash
+```bash
 cd mobile
 npm install
-\`\`\`
+```
 
-The mobile application reads its API URL from \`EXPO_PUBLIC_API_BASE_URL\`. If the variable is not set, it uses the configured hosted API URL:
+Мобильное приложение получает адрес API из переменной `EXPO_PUBLIC_API_BASE_URL`. Если переменная не задана, используется адрес размещённого сервера:
 
-\`\`\`text
+```text
 https://trainixapi.onrender.com/api
-\`\`\`
+```
 
-To use a locally running backend, create \`mobile/.env\`:
+Для подключения к локальному backend создайте файл `mobile/.env`:
 
-\`\`\`env
+```env
 EXPO_PUBLIC_API_BASE_URL=http://YOUR_LOCAL_IP:3000/api
-\`\`\`
+```
 
-Replace \`YOUR_LOCAL_IP\` with the host machine's LAN IP address when testing on a physical device. The device and computer must be on the same network. For Android Emulator, use \`10.0.2.2\` instead of \`localhost\` to reach the host machine.
+Замените `YOUR_LOCAL_IP` на локальный IP-адрес компьютера. При запуске на физическом устройстве телефон и компьютер должны находиться в одной сети Wi-Fi.
 
-Start Expo:
+Для Android Emulator вместо `localhost` используйте `10.0.2.2`:
 
-\`\`\`bash
+```env
+EXPO_PUBLIC_API_BASE_URL=http://10.0.2.2:3000/api
+```
+
+Запустите Expo:
+
+```bash
 npx expo start
-\`\`\`
+```
 
-Available package scripts:
+Доступные команды из `package.json`:
 
-\`\`\`bash
+```bash
 npm run android
 npm run ios
 npm run web
 npm run lint
-\`\`\`
+```
 
-Use the Expo terminal shortcuts or the Expo Go app to open the project on a supported device.
+Открыть приложение можно с помощью Expo Go или соответствующего эмулятора.
 
-## 🔌 API Overview
+## 🔌 Обзор API
 
-All API routes are mounted under \`/api\`. Except for the health check, the routes below use JWT authentication. Trainer and administrator operations also apply role checks where configured.
+Все маршруты API подключаются с префиксом `/api`. За исключением проверки работоспособности сервера, маршруты используют JWT-аутентификацию. Для операций тренеров и администраторов дополнительно применяются проверки ролей там, где это предусмотрено маршрутом.
 
-| Resource | Base path | Available operations |
+| Ресурс | Базовый путь | Основные операции |
 |---|---|---|
-| Health | \`/api/health\` | \`GET\` |
-| Authentication | \`/api/auth\` | \`POST /register\`, \`POST /login\`, \`GET /me\` |
-| Users | \`/api/users\` | \`PUT /profile\`, \`POST /become-trainer-demo\` |
-| Foods | \`/api/foods\` | \`GET /\`, \`POST /\` |
-| Meals | \`/api/meals\` | \`GET /\`, \`POST /\`, \`GET /by-date\`, \`GET /summary/daily\`, \`GET /:mealId\`, meal item CRUD, \`DELETE /:mealId\` |
-| Exercises | \`/api/exercises\` | \`GET /\`, \`POST /\`, \`DELETE /:id\` |
-| Workouts | \`/api/workouts\` | Workout CRUD, exercise item CRUD, \`GET /exercises/:exerciseId/last-sets\` |
-| Workout sets | \`/api/workout-items\` | \`GET/POST /:itemId/sets\`, \`PUT/DELETE /:itemId/sets/:setId\` |
-| Workout statistics | \`/api/workout-stats\` | \`GET /summary/weekly\`, \`GET /exercise-progress/:exerciseId\` |
-| Dashboard | \`/api/dashboard\` | \`GET /\` |
-| Trainer profiles | \`/api/trainer-profiles\` | \`GET /\`, \`GET /:id\`, \`GET /my\`, \`POST /\`, \`PUT /my\`, demo role operation |
-| Trainer applications | \`/api/trainer-applications\` | \`POST /\`, \`GET /my\`; admin: \`GET /\`, \`PUT /:id/review\` |
-| Workout plans | \`/api/workout-plans\` | Trainer/admin plan CRUD and plan item operations |
-| Nutrition plans | \`/api/nutrition-plans\` | Trainer/admin plan CRUD and plan item operations |
-| Plan catalog and purchases | \`/api/plans\` | \`GET /\`, \`GET /purchased/my\`, \`GET /trainer/:trainerProfileId\`, \`GET /:type/:id\`, \`POST /:type/:id/purchase\` |
-| User statistics | \`/api/statistics\` | \`GET /me\` |
-| Reviews | \`/api/reviews\` | \`POST /\`, \`GET /trainer/:trainerProfileId\` |
+| Проверка сервера | `/api/health` | `GET` |
+| Авторизация | `/api/auth` | `POST /register`, `POST /login`, `GET /me` |
+| Пользователи | `/api/users` | `PUT /profile`, `POST /become-trainer-demo` |
+| Продукты | `/api/foods` | `GET /`, `POST /` |
+| Приёмы пищи | `/api/meals` | `GET /`, `POST /`, `GET /by-date`, `GET /summary/daily`, `GET /:mealId`, операции с элементами приёма пищи, `DELETE /:mealId` |
+| Упражнения | `/api/exercises` | `GET /`, `POST /`, `DELETE /:id` |
+| Тренировки | `/api/workouts` | CRUD тренировок и элементов, `GET /exercises/:exerciseId/last-sets` |
+| Подходы | `/api/workout-items` | `GET/POST /:itemId/sets`, `PUT/DELETE /:itemId/sets/:setId` |
+| Статистика тренировок | `/api/workout-stats` | `GET /summary/weekly`, `GET /exercise-progress/:exerciseId` |
+| Главная панель | `/api/dashboard` | `GET /` |
+| Профили тренеров | `/api/trainer-profiles` | `GET /`, `GET /:id`, `GET /my`, `POST /`, `PUT /my` и демонстрационная операция с ролью |
+| Заявки тренеров | `/api/trainer-applications` | `POST /`, `GET /my`; для администратора: `GET /`, `PUT /:id/review` |
+| Тренировочные программы | `/api/workout-plans` | CRUD программ и операции с элементами для тренеров/администраторов |
+| Планы питания | `/api/nutrition-plans` | CRUD программ и операции с элементами для тренеров/администраторов |
+| Каталог и покупки программ | `/api/plans` | `GET /`, `GET /purchased/my`, `GET /trainer/:trainerProfileId`, `GET /:type/:id`, `POST /:type/:id/purchase` |
+| Статистика пользователя | `/api/statistics` | `GET /me` |
+| Отзывы | `/api/reviews` | `POST /`, `GET /trainer/:trainerProfileId` |
 
-### Example: authentication
+### Пример: регистрация и авторизация
 
-Register a user:
+Регистрация пользователя:
 
-\`\`\`http
+```http
 POST /api/auth/register
 Content-Type: application/json
-\`\`\`
+```
 
-\`\`\`json
+```json
 {
   "username": "alex",
   "email": "alex@example.com",
   "password": "your_password"
 }
-\`\`\`
+```
 
-Log in:
+Авторизация:
 
-\`\`\`http
+```http
 POST /api/auth/login
 Content-Type: application/json
-\`\`\`
+```
 
-\`\`\`json
+```json
 {
   "email": "alex@example.com",
   "password": "your_password"
 }
-\`\`\`
+```
 
-The authentication response contains a JWT and serialized user data. Use the token for protected endpoints:
+В ответе сервер возвращает JWT и данные пользователя. Для обращения к защищённым маршрутам необходимо передавать токен:
 
-\`\`\`http
+```http
 Authorization: Bearer <token>
-\`\`\`
+```
 
-### Example: daily nutrition summary
+### Пример: получение дневной статистики питания
 
-\`\`\`http
+```http
 GET /api/meals/summary/daily?date=2026-11-08
 Authorization: Bearer <token>
-\`\`\`
+```
 
-The response includes consumed calories and macronutrients, the user's targets, remaining values and the number of meals logged for the selected day.
+Ответ содержит информацию о потреблённых калориях и макронутриентах, целевых значениях, остатке на день и количестве записанных приёмов пищи.
 
-> The table is an endpoint overview, not a substitute for request/response schemas. For exact validation rules and payload fields, refer to the corresponding route and controller files in \`backend/src/\`.
+> Таблица выше представляет обзор маршрутов, а не полную спецификацию API. Точные поля запросов, форматы ответов и правила валидации описаны в соответствующих файлах маршрутов и контроллеров в `backend/src/`.
 
-## 🧠 Implementation Highlights
+## 🧠 Особенности реализации
 
-### Nutrition calculations
+### Расчёт пищевой ценности
 
-Food records store nutritional values per 100 grams. When a food is added to a meal, the backend calculates the item's values using:
+В базе данных пищевая ценность продукта хранится в расчёте на 100 граммов. При добавлении продукта в приём пищи сервер рассчитывает фактические значения с учётом указанной массы.
 
-\`\`\`text
-portion factor = grams / 100
+```text
+Коэффициент порции = масса продукта в граммах / 100
 
-item nutrient = nutrient per 100 g × portion factor
-\`\`\`
+Пищевая ценность порции =
+    пищевая ценность на 100 г × коэффициент порции
+```
 
-The meal document keeps aggregated calories, protein, fat and carbohydrates. Removing a meal item also subtracts its values from the meal totals.
+Приём пищи хранит агрегированные значения калорий, белков, жиров и углеводов. При удалении элемента его значения вычитаются из общей суммы.
 
-### Data integrity
+### Целостность данных
 
-- A compound unique index on user, date and meal type prevents duplicate meal slots for a given day.
-- Mongoose schemas define allowed values, required fields and numeric constraints.
-- User-owned workout and meal resources are queried together with the authenticated user's ID.
-- A review is associated with a purchased plan, and the same purchase cannot receive multiple reviews.
+- Составной уникальный индекс по пользователю, дате и типу приёма пищи предотвращает создание повторяющихся приёмов одного типа за день.
+- Mongoose-схемы задают обязательные поля, допустимые значения и числовые ограничения.
+- При работе с пользовательскими тренировками и приёмами пищи запросы учитывают ID авторизованного пользователя.
+- Отзыв связан с приобретённой программой; одна покупка не может получить несколько отзывов.
 
-### Client networking
+### Сетевое взаимодействие на клиенте
 
-The shared mobile API client:
+Общий API-клиент мобильного приложения:
 
-- Builds request URLs from a single configurable base URL.
-- Adds the Bearer token from AsyncStorage when authentication is required.
-- Uses a 25-second request timeout.
-- Retries network failures for GET requests, with a limited number of attempts.
-- Converts API and network errors into readable application errors.
+- Формирует адреса запросов на основе единой базовой конфигурации API.
+- Добавляет Bearer-токен из AsyncStorage для запросов, требующих авторизации.
+- Ограничивает время ожидания запроса 25 секундами.
+- Повторяет GET-запросы при сетевых ошибках с ограниченным количеством попыток.
+- Преобразует ошибки API и сети в понятные приложению сообщения.
 
-### Client state and session
+### Управление состоянием и пользовательская сессия
 
-Authentication is centralized in \`AuthContext\`. The context restores a saved token on startup, requests the current user from the API and clears invalid session data. Zustand stores keep feature-specific builder and active-plan state separate from the authentication context.
+Авторизация централизована в `AuthContext`. При запуске приложения контекст восстанавливает сохранённый токен, запрашивает актуальные данные пользователя и очищает недействительную сессию.
 
-## 🧪 Testing and Code Quality
+Zustand используется для хранения состояния отдельных функциональных модулей, в том числе конструкторов и активных программ. Это позволяет отделить состояние авторизации от состояния отдельных экранов и сценариев приложения.
 
-The inspected package scripts currently provide:
+## 🧪 Тестирование и качество кода
 
-- **Mobile linting:** run \`npm run lint\` from \`mobile/\`.
-- **Backend development:** run \`npm run dev\` from \`backend/\`.
+В проверенных `package.json` обнаружены следующие команды:
 
-No automated test script or dedicated test suite was found in the repository during this review. The project should therefore not be considered covered by automated unit or integration tests.
+- **Проверка мобильного приложения:** `npm run lint` из директории `mobile/`.
+- **Запуск backend в режиме разработки:** `npm run dev` из директории `backend/`.
 
-A useful manual verification flow is:
+Автоматизированный набор unit- или integration-тестов в репозитории при анализе не обнаружен. Поэтому проект не следует считать покрытым автоматическими тестами.
 
-1. Start MongoDB and the backend.
-2. Check \`GET /api/health\`.
-3. Register a test account and sign in.
-4. Create a workout, add an exercise and record sets.
-5. Add a meal and food items, then check the daily nutrition summary.
-6. Verify protected endpoints reject requests without a valid token.
+Для ручной проверки основных сценариев можно использовать следующий порядок:
 
-## ⚙️ Data Seeding
+1. Запустить MongoDB и backend.
+2. Проверить доступность `GET /api/health`.
+3. Зарегистрировать тестового пользователя и выполнить вход.
+4. Создать тренировку, добавить упражнение и записать подходы.
+5. Добавить приём пищи и продукты, затем проверить дневную сводку КБЖУ.
+6. Убедиться, что защищённые маршруты отклоняют запросы без действительного токена.
 
-The backend provides a seed command:
+## ⚙️ Начальное заполнение базы данных
 
-\`\`\`bash
+В backend предусмотрена команда для добавления начальных данных:
+
+```bash
 cd backend
 npm run seed
-\`\`\`
+```
 
-It inserts predefined food and exercise records. **Use this command only with a development database:** the current seed script deletes the existing \`Exercise\` and \`Food\` collections before inserting the predefined data.
+Скрипт добавляет заранее подготовленные продукты и упражнения.
 
-## 🛣️ Possible Next Steps
+**Важно:** запускайте команду только на тестовой базе данных. Перед добавлением начальных данных скрипт удаляет существующие коллекции `Exercise` и `Food`.
 
-The following are potential improvements, not claims about already implemented functionality:
+## 🛣️ Возможные направления развития
 
-- Add automated backend unit and integration tests.
-- Add API schema documentation, for example with OpenAPI/Swagger.
-- Add a documented \`.env.example\` for backend and mobile configuration.
-- Add CI checks for linting and tests.
-- Add application screenshots and a short demo video.
-- Review and document the media upload flow before exposing it as a supported feature.
+Ниже перечислены идеи для дальнейшего развития проекта, а не заявленные реализованные функции:
 
-## 👨‍💻 Author
+- Добавить автоматизированные unit- и integration-тесты backend.
+- Подготовить документацию API с помощью OpenAPI/Swagger.
+- Добавить шаблоны `.env.example` для мобильного приложения и сервера.
+- Настроить CI для автоматической проверки качества кода и тестов.
+- Добавить актуальные скриншоты приложения и демонстрационное видео.
+- Завершить и задокументировать сценарий загрузки медиафайлов.
 
-**BeneFIT124** — project author.
+## 👨‍💻 Автор
+
+**BeneFIT124** — автор проекта.
 
 - GitHub: [@BeneFIT124](https://github.com/BeneFIT124)
-- Repository: [TrainixDiploma](https://github.com/BeneFIT124/TrainixDiploma)
+- Репозиторий: [TrainixDiploma](https://github.com/BeneFIT124/TrainixDiploma)
 
 ---
 
 <div align="center">
 
-**Trainix — build consistency, track progress.**
+**Trainix — последовательность сегодня, результат завтра.**
 
 </div>
